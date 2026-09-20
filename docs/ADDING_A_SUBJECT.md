@@ -9,6 +9,9 @@ Checklist này dùng khi bạn cung cấp tài liệu của môn tiếp theo. Đ
 
 1. Đọc/trích tài liệu gốc (Word/PDF/pptx) — lấy đúng số liệu, đúng thuật toán, đúng ví dụ
    đề thi thật nếu có. Không tự bịa ví dụ khi tài liệu đã có ví dụ thật.
+   Nếu PDF là **ảnh scan** (không copy được chữ, máy không có `pdftotext`): dùng `PDFKit` + `Vision`
+   (`VNRecognizeTextRequest`, `recognitionLanguages = ["vi-VN","en-US"]`) qua một script Swift để OCR, rồi
+   **xem ảnh trang** cho mọi chỗ có số liệu/mã — OCR hay nhầm chữ số (CTDL: `123` → `1123`, `F` → `E`).
 2. Liệt kê "dạng bài" giống cách CTRR có 7 dạng (1a,1b,1c,3a,3b,3c,3d) — mỗi dạng bài
    sau này là 1 module.
 3. Với mỗi dạng bài, xác định: input là gì (đồ thị? hàm số? ma trận?), output từng bước

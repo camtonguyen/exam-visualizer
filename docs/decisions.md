@@ -5,6 +5,81 @@ One entry per decision, not per session — see `docs/progress.md` for session-b
 
 ---
 
+## 2026-09-21 — CTDL `mock-exams`: chuyển đề artifact bằng script thay vì gõ lại; đề thực hành thật KHÔNG chấm điểm; bằng chứng bộ đề đúng lấy từ engine
+
+(1) 42 câu của artifact có nhiều HTML (`<b>`, `<code>`, `&lt;`, bảng phụ). Gõ lại tay = rủi ro sai chữ số/đáp án; nên trích trực tiếp dữ liệu (`EXAMS`) từ file artifact đã lưu, chuyển HTML → markup gọn (`**đậm**`, `` `code` ``) có kiểm "không còn thẻ lạ" trước khi giải mã thực thể,
+rồi sinh file TS. Hiển thị bằng `RichText` (text node), không `dangerouslySetInnerHTML`. (2) Đề THI THỬ được giữ NGUYÊN cách chấm của artifact (rubric 3/4/3, mốc 7, điểm cộng comment I/O ngoài tổng 10) và gắn nhãn rõ "không phải đề thật".
+Đề THỰC HÀNH thật (Test01/02/03, Đề mẫu Phần 2) KHÔNG chấm điểm vì PDF không cho điểm từng câu — bịa thang điểm sẽ là bịa dữ liệu đề (CLAUDE.md); thay vào đó: checklist tự đánh dấu, bảng phạt thật (−1/−3/0, thiếu comment −0.25), lối tắt sang module ôn và tên file lời giải.
+(3) Vì đề thi thử do bên thứ ba dựng, độ tin cậy của đáp án được KIỂM bằng cách dùng các engine đã xác minh (chọn/chèn, nhị phân, Queue, bảng băm, Stack, BST, máy bộ nhớ) tính lại đáp án các câu điền và so với đáp án artifact — khớp hết; mỗi đề đúng 10 điểm là bất biến được test.
+(4) Cả 3 đề luôn mount (chỉ ẩn bằng CSS) để đổi đề không mất bài; state chấm (tick rubric, đáp án đã kiểm tra) nằm ở `ExamPaper`, còn nháp/ô nhập nằm trong từng thẻ. Không lưu localStorage: mục đích là làm một lượt rồi xem kết quả; thêm khi có nhu cầu.
+
+## 2026-09-20 (7) — CTDL `bst`: `TreeCanvas` riêng, layout theo thứ hạng trung tố; giữ hành vi "trùng thì bỏ qua" thay vì sao chép `add` của thầy
+
+Cây cần layout khác hàng-cột của `PointerCanvas`. Chọn x = thứ hạng trung tố (mỗi node một cột riêng ⇒ không bao giờ chồng lấn, đọc trái→phải ra dãy tăng dần — chính mẹo "LNR luôn tăng"), y = độ sâu; vị trí snap giữa các bước
+(cạnh phải khớp node). Không dùng thuật toán căn giữa cha-con (Reingold–Tilford): đẹp hơn cho cây cân nhưng vị trí cha nhảy khi con thêm vào, khó theo dõi từng bước; đề thi chỉ cây nhỏ (≤ 11 node).
+Node mới cấp phát vẽ nét đứt cạnh cây (`pending`) cho tới khi nối — cùng quy ước với `HashTableCanvas`.
+Về hành vi: `add` trong `demo_tree_v1.cpp` không có nhánh bằng (vòng lặp không thoát khi trùng), nhưng đề thực hành (Test01 Câu 1, LT005 Câu 4) yêu cầu trùng thì bỏ qua và trả false ⇒ engine theo ĐỀ, kiểm trùng TRƯỚC khi cấp phát
+(khớp `bst_test01.cpp` đã kiểm chứng), và nêu khác biệt với code thầy trong tip/code chuẩn thay vì mô phỏng lại lỗi vô hạn. Duyệt đệ quy hiển thị theo thứ tự thăm (không vẽ call stack — không cần cho đáp án); duyệt LNR bằng `std::stack`
+mới hiện stack vì đó là câu đề hỏi.
+
+## 2026-09-20 (6) — CTDL `pointers`: máy bộ nhớ tính kết quả thay vì gõ tay từng ảnh chụp; không viết trình thông dịch C++
+
+Dạng "đọc code ghi kết quả" cần vẽ stack/heap/con trỏ sau MỖI dòng, và đáp án (giá trị, NULL, lỗi runtime) phụ thuộc hành vi thật của C++. Ba lựa chọn: (a) gõ tay ảnh chụp từng dòng ×12 chương trình — dễ lệch với đáp án,
+không tái dùng; (b) trình thông dịch C++ — quá lớn, đề chỉ dùng một tập rất nhỏ; (c) **máy bộ nhớ tối giản + mỗi dòng đề là vài lệnh của máy** (`declarePtr`, `assign`, `cout`, biểu thức vế trái dạng chuỗi C++). Chọn (c):
+kết quả do máy tính nên ảnh chụp và đáp án không thể mâu thuẫn nhau, và `check.mjs` đối chiếu đáp án với kết quả C++ THẬT đã chạy (bắt lỗi ở người viết chương trình mẫu lẫn ở máy).
+Máy cố ý KHÔNG hỗ trợ: số học con trỏ lưu vào biến (chỉ `*(a+K)`/`a[K]`), `delete`, hàm, vòng lặp — đề thật chưa dùng; thêm khi có đề cần. Số thực in theo `cout` mặc định (6 chữ số có nghĩa), không mô phỏng float 32-bit
+(kết quả trong đề không phân biệt). Rò rỉ = đối tượng heap không còn với tới từ biến stack (tính lại mỗi bước, nên nét đứt đỏ xuất hiện đúng dòng `p = &a`). In con trỏ NULL hiển thị `NULL` (máy thật in 0/0x0 — ghi chú trong lời giải thích).
+Lỗi runtime (`CrashError`) dừng chương trình; lỗi của CHƯƠNG TRÌNH MẪU (biến chưa khai báo, sai kiểu) là `Error` thường để không bị nuốt thành "đáp án lỗi runtime".
+
+## 2026-09-20 (5) — CTDL: bảng băm dùng `HashTableCanvas` riêng thay vì mở rộng `PointerCanvas`
+
+Bảng băm là N chuỗi song song có chỉ số bucket, trong khi `PointerCanvas` dành hàng 2 cho "node vừa cấp phát chưa nối" và đặt nhãn con trỏ trên/dưới theo hàng. Mở rộng (rowLabels, hàng nhỏ gọn, nhãn theo bucket)
+sẽ làm quy ước của canvas cũ mơ hồ và phình props cho cả stack/queue/danh sách. Quyết định: canvas riêng, snapshot riêng (`HashSnapshot`: `buckets[i]` = chuỗi, `pending` = node nét đứt chưa nối, `labels` = pHead/pTail/p của bucket đang đổi),
+dùng chung `NODE_COLOR`/`HighlightState`. Tô bucket bằng key `b{i}` trong `nodeHighlights` (không thêm field mới). Chỉ hiển thị nhãn con trỏ của bucket đang thao tác — 10 bucket × pHead/pTail sẽ chật hình.
+Rejected: một `PointerCanvas` tổng quát với layout tùy biến (tốn hơn 2 canvas nhỏ), và vẽ bucket như mảng con trỏ trong `ArrayCanvas` (mất chuỗi nối kết — chính là nội dung "nối kết").
+
+## 2026-09-20 (4) — CTDL: danh sách dùng `ListModel` với next/prev từng node; `prev` optional trên `PointerNode`; dangling cả ở `next`/`prev`
+
+DSLK đôi buộc phải tách `pNext` và `pPre` thành các dòng lệnh riêng — chính chỗ đề hay hỏi ("quên 1 chiều"). Vì vậy engine danh sách không suy trạng thái từ một mảng thứ tự
+(như stack/queue) mà giữ `next`/`prev` riêng từng node (`createListModel`); thứ tự hiển thị (`order`) tách khỏi liên kết, nên mọi trạng thái trung gian sai lệch đều vẽ được.
+`prev` là field OPTIONAL: có ⇒ vẽ nút 3 ngăn, không ⇒ nút đơn — module cũ (stack/queue) không đổi. Rejected: một `PointerNode` luôn có `prev` (làm mọi hình đơn rối),
+và type riêng cho DSLK đôi (hai canvas trùng logic). `next`/`prev` trỏ vào id đã `delete` được coi là hợp lệ và vẽ bằng stub đỏ "✗ freed" — đúng trạng thái giữa `delete l.pTail;` và
+`prev->pNext = nullptr;`. Kiểm bằng mutation test tay (4 lỗi cố ý đều bị `check.mjs` bắt) vì test pass ngay lần đầu chưa chứng minh test có răng.
+
+## 2026-09-20 (3) — CTDL: `PointerCanvas` dùng chung; engine chỉ định vị trí ô, canvas không tự layout; dangling là trạng thái hợp lệ
+
+Stack/Queue (và sau này DSLK đơn/đôi, bucket bảng băm) cần vẽ node + con trỏ. Quyết định: 1 canvas chung `components/pointer/PointerCanvas.tsx` đọc
+`AlgoStep.pointerSnapshot` = `{nodes:[{id,value,next,row,col}], pointers:{tên → id|null}}`.
+(1) **Engine đặt `row/col`, canvas không tự layout**: cần thể hiện "node p đã cấp phát nhưng CHƯA nối" (hàng 2) — canvas tự suy chuỗi từ con trỏ sẽ không vẽ được trạng thái
+trung gian đó, mà đây chính là điều đề thi hỏi (thứ tự 2 dòng push/enQueue). (2) **Con trỏ trỏ vào id không còn trong `nodes` = dangling**, vẽ bằng chip đỏ — biến "quên `pRear = NULL`"
+từ lời cảnh báo thành hình ảnh thấy được; check.mjs khẳng định dangling chỉ xuất hiện đúng 1 bước. (3) Vị trí ô snap giữa các bước (chỉ fade node mới): mũi tên phải luôn khớp ô, tween sẽ làm
+mũi tên và hộp lệch nhau giữa chừng. Rejected: tự layout theo con trỏ (mất trạng thái trung gian), thư viện đồ thị (thừa), canvas riêng trong `subjects/ctdl/`
+(DSLK/bảng băm cùng dùng). BST sẽ cần layout cây riêng — không cố nhồi vào canvas hàng-cột này.
+
+## 2026-09-20 (2) — CTDL: thêm `ArrayCanvas` dùng chung (khác quyết định "không canvas" của XSTK) và sinh "Ghi vào bài làm" từ `steps`
+
+XSTK bỏ hết canvas (2026-09-15 đợt 3) vì đường cong/cây xác suất không giúp làm bài. Tìm kiếm/sắp xếp khác: **đáp án đề chính là bảng mảng
+từng bước** ("Lần #k", cột L/R/M), nên vẽ mảng + con trỏ là nội dung, không phải trang trí → thêm `components/table/ArrayCanvas.tsx`
+(đọc `AlgoStep.arraySnapshot` + `arrayMarkers`, tô ô bằng `nodeHighlights[String(i)]`, cùng `NODE_COLOR`). Hai field mới là optional trên
+`AlgoStep` — module CTRR/XSTK không đổi. Rejected: một canvas riêng trong `subjects/ctdl/` (sau này Stack/Queue/hashtable/BST cùng cần hiển thị
+cấu trúc; canvas dùng chung theo CLAUDE.md), và nhét mảng vào `tableSnapshot` (kiểu `string|number` không đủ và không có màu ô).
+`AnswerKeyPanel` cho CTDL sinh từ `title` của từng step (`ctdl/answerKey.ts`) thay vì chép tay như XSTK: `title` đã đúng định dạng đề, một nguồn
+sự thật không thể lệch với phần diễn giải; không điền điểm từng dòng vì PDF không cho.
+Nhị phân/nội suy trên dãy chưa sắp xếp KHÔNG chạy tiếp mà trả 1 bước cảnh báo — dạy đúng điều kiện áp dụng (đề mẫu Câu 2) thay vì in ra
+kết quả sai.
+
+## 2026-09-20 — CTDL: kho kiến thức + code C++ kiểm chứng trước, module app sau (stub `ComingSoon`)
+
+Môn CTDL khác 2 môn trước: đề là **lập trình C++** (đọc code, chạy tay, viết hàm), tài liệu là PDF scan + code của thầy.
+Quyết định: (1) đóng gói vào skill + `reference/solutions/*.cpp` **biên dịch được, có assert** thay vì chỉ văn xuôi — đáp án
+"đọc code ghi kết quả" phụ thuộc hành vi thật của C++ (in con trỏ NULL, `(*p)++`, `float` in `9.3555e+06`), nên chạy thật rẻ hơn tranh luận;
+(2) đăng ký môn ngay nhưng cả 10 module giữ `ComingSoon` — theo CLAUDE.md, module chưa có engine + đề thật là stub;
+(3) artifact 3 đề thi thử được coi là **nguồn luyện tập, không phải đề thật**: đáp án đã đối chiếu, nhưng bảng điểm 3/4/3 và mốc "≥7" là của tác giả artifact
+(các PDF thật không có điểm từng câu, chỉ có phạt thực hành −0.25/−1/−3/0).
+Rejected: dựng luôn 10 module React (không ai yêu cầu, và mỗi module cần port engine + kiểm trace — làm từng module khi có nhu cầu);
+hard-code thuật toán khác ngoài tài liệu (nổi bọt/nhanh/trộn) — không có trong nguồn, chỉ ghi chú "ngoài nguồn" trong SKILL.md.
+Đề mơ hồ giữ nguyên và ghi cách hiểu (Test01 Câu 7, Test03 Câu 9) thay vì im lặng chọn.
+
 ## 2026-09-15 (4) — XSTK Giai đoạn 2 complete: standard z via a real inverse-CDF, Student-t via table-lookup input, not computed
 
 Implemented the 7 remaining modules (`ci-known-sigma`, `ci-sample-proportion`,

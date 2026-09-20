@@ -51,6 +51,95 @@ export interface AlgoStep {
   groupHighlights?: GroupHighlight[];
   /** Free-form per-step data for the side table (e.g. current L(v) labels, S set). */
   tableSnapshot?: Record<string, string | number>;
+  /** 1-D array state at this step, for array canvases (search/sort traces). Cell i is
+   *  highlighted through `nodeHighlights[String(i)]`, same state→color map as graphs. */
+  arraySnapshot?: number[];
+  /** Pointer labels drawn under the cells, label → cell index (e.g. { L: 0, R: 4, M: 2 }).
+   *  Labels sharing one index are drawn together ("L,M"); out-of-range indices are skipped. */
+  arrayMarkers?: Record<string, number>;
+  /** Linked-node diagram at this step (list/stack/queue/hash bucket…), for `PointerCanvas`.
+   *  Node cells are highlighted through `nodeHighlights[node.id]`. */
+  pointerSnapshot?: PointerSnapshot;
+  /** Hash table (chained buckets) at this step, for `HashTableCanvas`. Bucket header i is highlighted
+   *  through `nodeHighlights["b" + i]`, chain nodes through `nodeHighlights[node.id]`. */
+  hashSnapshot?: HashSnapshot;
+  /** Program memory (stack variables + heap objects + output) after this step, for `MemoryCanvas`. */
+  memorySnapshot?: MemorySnapshot;
+  /** Binary tree at this step, for `TreeCanvas`. Nodes are highlighted through `nodeHighlights[node.id]`. */
+  treeSnapshot?: TreeSnapshot;
+  /** 1-based line of the module's source listing this step executes — the code panel highlights it. */
+  codeLine?: number;
+}
+
+export interface MemSlotView {
+  /** What the cell shows: "39", "?" (uninitialized), "NULL", or "" for a non-NULL pointer (drawn as an arrow). */
+  text: string;
+  /** Id of the object a non-NULL pointer points to ("v:a" stack variable, "h1" heap object). */
+  target?: string;
+}
+
+export interface MemObjView {
+  id: string;
+  /** Variable name (stack) or type name (heap: "Node", "float", "double[10]"). */
+  label: string;
+  type: string;
+  heap: boolean;
+  /** Fake but stable address, e.g. "0x1000" — for questions that print addresses. */
+  addr: string;
+  kind: "scalar" | "struct" | "array";
+  slot?: MemSlotView;
+  fields?: { name: string; slot: MemSlotView }[];
+  cells?: MemSlotView[];
+  /** Heap object no pointer reaches any more (memory leak). */
+  leaked?: boolean;
+}
+
+export interface MemorySnapshot {
+  stack: MemObjView[];
+  heap: MemObjView[];
+  output: string;
+  /** Runtime error that stopped the program at this step (NULL dereference…). */
+  crashed?: string;
+  /** Keys of what this step changed: object id (new object), `id` (scalar), `id.field`, `id[index]`. */
+  changed: string[];
+}
+
+export interface HashNode {
+  id: string;
+  value: number;
+}
+
+export interface HashSnapshot {
+  size: number;
+  /** buckets[i] = chain of bucket i, head first. */
+  buckets: HashNode[][];
+  /** A node just allocated for `bucket` that is not linked in yet — drawn dashed at the end of that chain. */
+  pending?: { bucket: number; node: HashNode };
+  /** Pointer labels drawn under a node: label → node id (e.g. pHead / pTail / p of the bucket being changed). */
+  labels?: Record<string, string>;
+}
+
+/** One node box of a pointer diagram. `row`/`col` are the grid cell the engine wants it drawn in
+ *  (main chain on row 0; a freshly allocated, not-yet-linked node on row 1) — layout is the engine's
+ *  call so a step can show "node exists but is not linked yet". */
+export interface PointerNode {
+  id: string;
+  value: string | number;
+  /** id of the node this one's pNext points to, or null for NULL. An id that is no longer in the
+   *  snapshot's `nodes` = pNext left pointing at freed memory (drawn as a red "freed" stub). */
+  next: string | null;
+  /** Doubly linked list only: id of the pPre target (null = NULL). Present ⇒ the node is drawn with a
+   *  pPre cell; absent ⇒ singly linked box. Use it on EVERY node of a snapshot or on none. */
+  prev?: string | null;
+  row: number;
+  col: number;
+}
+
+export interface PointerSnapshot {
+  nodes: PointerNode[];
+  /** Named pointer → node id (null = NULL). An id that is no longer in `nodes` is drawn as a
+   *  DANGLING pointer (freed memory) — that is the point of e.g. "forgot pRear = NULL". */
+  pointers: Record<string, string | null>;
 }
 
 export interface AlgoResult {
@@ -256,4 +345,24 @@ export interface JointContinuousSpec {
   pointConditional: { x0: number; yFrom: number; yTo: number };
   /** Câu hỏi điều kiện trên 1 KHOẢNG X (xác suất có điều kiện P(B|A)=P(A∩B)/P(A)). */
   intervalConditional: { xFrom: number; xTo: number; yFrom: number; yTo: number };
+}
+
+export interface TreeNodeView {
+  id: string;
+  value: number;
+  left: string | null;
+  right: string | null;
+}
+
+export interface TreeSnapshot {
+  root: string | null;
+  nodes: TreeNodeView[];
+  /** A node just allocated but not linked into the tree yet — drawn dashed beside the tree. */
+  pending?: { id: string; value: number };
+  /** Named pointers (pGoto, pLoca, p…) → node id, or null = NULL (listed as a chip under the drawing). */
+  labels?: Record<string, string | null>;
+  /** Contents of an explicit `std::stack<Node*>` (bottom → top), for iterative traversals. */
+  stack?: number[];
+  /** Values printed so far by a traversal, in order. */
+  output?: number[];
 }

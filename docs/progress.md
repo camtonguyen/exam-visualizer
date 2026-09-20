@@ -5,6 +5,90 @@ Keep each entry to ~3-5 lines — this is a pointer for `/resume`, not a full ch
 
 ---
 
+## 2026-09-21 — CTDL: module `mock-exams` — hoàn tất 10/10 module
+
+- 3 đề thi thử của artifact (42 câu) được **trích bằng script** từ dữ liệu artifact đã lưu (chạy trong vm, HTML → markup gọn) rồi sinh `data/mockExams.ts` — không gõ tay nên không sai chữ; script không nằm trong repo (dữ liệu trong repo là nguồn từ nay).
+  `engine/mockExam.ts`: kiểu dữ liệu + chấm điểm thuần (chuẩn hóa đáp án, ô/nhóm đúng, điểm câu điền all-or-nothing, rubric có TRẦN điểm câu + điểm cộng tách riêng, tổng theo phần).
+- `RichText` (markup gọn, không innerHTML), `MockQuestionCards` (Rubric/Fill), `PracticeExams` (4 đề thực hành thật: checklist + quy định phạt thật + lối tắt `/ctdl/<module>` và tên file lời giải C++), `MockExamsModule` (3 đề luôn mount, chỉ ẩn ⇒ đổi đề không mất bài).
+- **Đối chiếu đáp án artifact với engine đã kiểm chứng** trong `check.mjs`: chọn/chèn trực tiếp, nhị phân, Queue, bảng băm, Stack (đổi 13 sang nhị phân), BST (LNR), máy bộ nhớ (`*a`, `l.tail->data`, 3 con trỏ cùng node), `tinhLuong` = 9.355.500 — TẤT CẢ khớp, nên bộ đề chấm đúng. Cũng khẳng định mỗi đề đúng 10 điểm (3/4/3, ý cộng lại = điểm câu) và làm đúng hết ⇒ 10.
+- Kiểm: mutation test 9 lỗi cố ý ở hàm chấm điểm — 8/9 bị bắt ngay; 1 mutant sống (bỏ trần điểm câu) vì dữ liệu thật luôn vừa khít điểm ⇒ thêm test với câu tổng hợp rồi bắt được. Kịch bản giao diện thật bằng Chrome headless (tick rubric ⇒ 0.75, điểm cộng +0.25 không vào tổng, điền sai 1 ô ⇒ 0.80 kèm đáp án đúng,
+  ô sau kiểm tra bị khóa, nộp bài 2.55/10, đổi Đề 1↔2 giữ nguyên bài, làm lại từ đầu, tab thực hành 3/10 + 4 lối tắt đúng, 0 lỗi console). Hai lỗi đầu tiên là của SCRIPT test (escape regex; selector trúng nhầm thẻ) — không phải của app.
+- Kết thúc: CTDL 10/10 module thật; `ComingSoon` không còn được môn nào dùng (component vẫn nằm trong `src/routes/`).
+
+## 2026-09-20 (7) — CTDL: module `bst` (9/10)
+
+- `TreeCanvas` + `AlgoStep.treeSnapshot`; engine `ctdl/engine/bst.ts`: insert KHÔNG đệ quy từng bước (`pGoto` xuống, `pLoca` là cha, trùng ⇒ bỏ qua, `initNode` nét đứt rồi `pLoca->pLeft/pRight = p`), search, duyệt NLR/LNR/LRN,
+  LNR không đệ quy bằng `std::stack` (Left_full → xử lý → Right, hiện nội dung stack + output tích lũy), đếm node. Đường đi, con trỏ, kết quả đều do engine tính.
+- 4 ví dụ: `demo_tree_v1.cpp`, Test01 Câu 10 (có trùng ⇒ 8 node, NLR `50 25 10 30 75 70 60 90` / LRN / LNR), Test01 Câu 5 (tìm 60 & 65), + 1 thi thử (artifact).
+- **Phát hiện khi đọc code thầy:** `add` trong `demo_tree_v1.cpp` KHÔNG có nhánh `value == pGoto->data` ⇒ lặp vô hạn khi chèn giá trị trùng; các đề thực hành yêu cầu "trùng thì bỏ qua" nên phải tự thêm nhánh `==`. Đã ghi vào tip, code chuẩn và SKILL.md.
+- Kiểm: `check.mjs` — bất biến MỌI ảnh chụp (id không trùng, không vòng/mồ côi, trung tố tăng ngặt = tính chất BST, nhãn/tô hợp lệ), đáp án đề (`50(25(10,30),75(70(60,),90))`, NLR/LRN/LNR, 3 lần trùng bị bỏ qua, node 60 chỉ ở `pending` tới khi nối),
+  fuzz 400 ca so với cài đặt tham chiếu độc lập; **mutation test 7 lỗi cố ý** (trùng vẫn chèn, đi sai hướng, LRN sai chỗ, bỏ Left_full, search sai hướng, cây rỗng không đặt gốc, con phải thành con trái) — cả 7 bị bắt.
+  Chạy app thật (Chrome headless) 0 lỗi console. (Hai lỗi là của bài test mình viết — dự đoán sai độ sâu stack tối đa, và bản tham chiếu dùng `this` — không phải của engine.)
+- Next: `mock-exams` (tự chấm 3 đề thi thử + 3 đề thực hành) — module cuối.
+
+## 2026-09-20 (6) — CTDL: module `pointers` — đọc code ghi kết quả (8/10)
+
+- Dựng **máy bộ nhớ** (`engine/memoryMachine.ts`): biến trên stack, đối tượng trên heap, con trỏ; bộ phân giải biểu thức kiểu C++ (`p->data`, `(*p).data`, `*a`, `a[3]`, `*(a+3)`, `l.tail->data`,
+  `(L.pHead->next)->data`, `&a`, `NULL`). Mỗi dòng đề viết bằng vài lệnh của máy; KẾT QUẢ (giá trị, NULL/rác, lỗi runtime, rò rỉ) do máy TÍNH — không gõ tay đáp án vào hình.
+  `memoryTrace.ts` chạy chương trình từng dòng, diff ảnh chụp để tô ô vừa đổi, dừng khi lỗi runtime.
+- `MemoryCanvas` (stack | heap | mũi tên | output tích lũy | banner lỗi) + `CodeBlock` tô dòng đang chạy (`AlgoStep.codeLine`). 12 chương trình lấy NGUYÊN VĂN từ đề thật (Đề mẫu Câu 4–7, Hướng dẫn ×2,
+  Luyện tập 005 Câu 5–10); đã mở ảnh trang LT005 Câu 8–10 để chép đúng (OCR thiếu/nhầm dòng khai báo).
+- Kiểm: `check.mjs` — mọi ví dụ cho ĐÚNG đáp án đã chạy thật bằng clang++ (kể cả `dm-c4` = lỗi runtime, `NULL` in ra), mọi mũi tên trỏ vào ô có thật, `lt-c5` rò rỉ từ đúng dòng `p = &a`,
+  `lt-c8` chỉ 1 node với 3 con trỏ, unit test bộ phân giải + 3 loại lỗi runtime; **mutation test 7 lỗi cố ý** (x++ trả giá trị mới, `*(a+K)` lệch 1, không phát hiện rò rỉ, gán con trỏ mất địa chỉ,
+  con trỏ rác không lỗi, `*a` ≠ `a[0]`, số thực không làm tròn 6 chữ số) — cả 7 bị bắt. Chạy app thật (Chrome headless) 0 lỗi console; sửa bố cục (hình + bộ điều khiển lên trên khung code dài).
+- Next: `bst` (cần layout cây riêng), `mock-exams` (tự chấm 3 đề thi thử + 3 đề thực hành).
+
+## 2026-09-20 (5) — CTDL: module `hashtable` (7/10)
+
+- Canvas riêng `components/hash/HashTableCanvas.tsx` + `AlgoStep.hashSnapshot`; engine `ctdl/engine/hashtable.ts` (add từng dòng: hashFun → initNode nét đứt → nối bucket, đụng độ nối cuối, không ghi đè; find chỉ duyệt 1 bucket;
+  in bảng theo `printHashtable`). `hashFun` chuẩn hóa số âm về [0, Size−1] (giống `hash_test03.cpp`).
+- 6 ví dụ, đều tài liệu thật: `hashtable_static.cpp` ×2, `hashtable_dynamic.cpp` (Size 7), `hashtable_4steps_dynamic.cpp` (Size 5), Test03 (Size 9, có giá trị trùng ⇒ 11 giá trị), Test03 Câu 7 (tìm X).
+  Kết quả khớp chú thích trong các file .cpp của thầy (bucket[3] = 73 53 13; Size 7: 14 21 / 8 15 22 / 10 17 3; …).
+- Kiểm: `check.mjs` — bảng cuối từng ví dụ, add chi tiết đúng 3 bước (rỗng)/4 bước (đụng độ) và node chỉ nằm ở `pending` tới khi nối, fuzz 400 ca (size 1–12, có số âm) so với mô hình mảng;
+  **mutation test 5 lỗi cố ý** (nối đầu thay vì cuối, không chuẩn hóa số âm, find sai bucket, ghi đè giá trị cũ, pTail không dời) — cả 5 bị bắt. Chạy app thật (Chrome headless) 0 lỗi console.
+- Next: `pointers` (đọc code ghi kết quả — chiếm nhiều câu đề thật), `bst` (layout cây riêng), `mock-exams`.
+
+## 2026-09-20 (4) — CTDL: module `linked-list` + `doubly-linked-list` (6/10)
+
+- `PointerNode.prev?` (optional) + `PointerCanvas` mở rộng: nút 3 ngăn [pPre|data|pNext] khi có `prev`, mũi tên `pPre`, cung nối tắt (khi `pNext`/`pPre` nhảy qua node), stub đỏ "✗ freed" cho `next`/`prev` còn trỏ vào node đã `delete`.
+- `engine/pointerModel.ts` thêm `createListModel`: mỗi node có `next`/`prev` riêng nên vẽ được trạng thái trung gian giữa 2 dòng lệnh (vd `p->pNext = pHead` đã chạy, `pHead = p` chưa;
+  DSLK đôi: `pNext` và `pPre` là 2 dòng/2 bước riêng). `delete` = xóa khỏi mô hình ⇒ mọi con trỏ còn trỏ vào đó tự thành dangling.
+- Engine `linkedList.ts` (addHead/addTail/timGiaTri/timNodeKeCuoi theo `list.cpp`; removeHead/Tail/Value là kiến thức chuẩn, gắn nhãn) và `doublyLinkedList.ts` (addHead/addTail/printList theo `QLSV_List2.cpp`; removeValue chuẩn).
+- Kiểm: `check.mjs` — trạng thái cuối mọi ca không dangling, đi xuôi/ngược khớp mô hình, next/prev đối xứng; fuzz 400+400 ca; **mutation test tay 4 lỗi cố ý** (quên pPre ở addTail, quên nối tắt chiều ngược,
+  quên `pTail = NULL` khi rỗng, quên lùi `pTail` khi xóa node cuối) — cả 4 bị bắt. Chạy app thật (Chrome headless) 0 lỗi console.
+- Next: `hashtable` (dùng lại PointerCanvas: mỗi bucket 1 hàng — cần hỗ trợ nhiều hàng chuỗi song song, khác quy ước "hàng 2 = node chưa nối"), `bst` (layout cây riêng), `pointers`, `mock-exams`.
+
+## 2026-09-20 (3) — CTDL: module `stack` + `queue` (4/10) + canvas node/con trỏ dùng chung
+
+- Thêm shared `components/pointer/PointerCanvas.tsx` (+ `AlgoStep.pointerSnapshot`, `CodeBlock`): hộp [data|•] + mũi tên pNext + nhãn con trỏ
+  (pTop/pFront/pRear/p); node vừa cấp phát chưa nối nằm hàng 2 (thấy được "p->pNext = s.pTop" trước "s.pTop = p"); con trỏ NULL/dangling hiện dạng chip.
+- Engine `ctdl/engine/{stack,queue,pointerModel}.ts` chạy từng dòng code của thầy; `brief` gộp thao tác lặp. Queue vẽ bước `delete p` node cuối với
+  `pRear` dangling rồi mới `pRear = NULL` (lỗi hay gặp). Mỗi module có "Ghi vào bài làm" (trạng thái sau từng thao tác, định dạng `printStack/printQueue` của thầy) + code chuẩn.
+- Kiểm: `check.mjs` mở rộng — bất biến mọi snapshot (id/ô không trùng, next/con trỏ hợp lệ, dangling chỉ đúng 1 chỗ), đáp án đề (Top < −89 78 −95 12 >, pop 1 1 0 1, `8 3 6`), fuzz 300×2 so với mô hình mảng;
+  tsc/build sạch; chạy app thật bằng Chrome headless bấm từng bước, 0 lỗi console.
+- Next: `linked-list` + `doubly-linked-list` (dùng lại PointerCanvas; DSLK đôi cần thêm mũi tên `pPre` → thêm field `prev` optional vào `PointerNode`), rồi `hashtable`, `bst`, `pointers`, `mock-exams`.
+
+## 2026-09-20 (2) — CTDL: module `searching` + `sorting` (2/10) xong
+
+- Engine TS `ctdl/engine/{searching,sorting}.ts` port từ `algos_trace.cpp`, cùng câu chữ đề ("Bước i = …", "L, R ⇒ M", "DỪNG vì L phải ≤ R",
+  "Hoán vị a, b", "Lần #k"). Nhị phân/nội suy trên dãy chưa sắp xếp trả 1 bước cảnh báo (điều kiện áp dụng, Đề mẫu Câu 2).
+- Thêm shared `components/table/ArrayCanvas.tsx` + 2 field `AlgoStep.arraySnapshot`/`arrayMarkers` (optional, không ảnh hưởng module cũ);
+  data thật: 5 ví dụ tìm kiếm + 4 ví dụ sắp xếp từ PDF, +2 ví dụ gắn nhãn thi thử/minh họa.
+- Kiểm: `node src/subjects/ctdl/engine/check.mjs` (trace đúng đề + 300 ca ngẫu nhiên so với `sort()`); `tsc -b`, `npm run build` sạch;
+  chạy app thật bằng Chrome headless (CDP) — bấm từng bước, 0 lỗi console; sửa 2 lỗi thấy khi xem: backtick thừa trong nhãn, ô cuối
+  tô "đang xét" ở bước cuối chọn trực tiếp.
+- Next: `stack` + `queue` (dữ liệu đã sẵn ở exam-bank; cần mô hình node/con trỏ — cân nhắc canvas node dùng chung với `linked-list`).
+
+## 2026-09-20 — CTDL (IT003): skill + kho đề + lời giải C++ + đăng ký môn (chưa có module)
+
+- Đọc toàn bộ `docs/ctdl/`: 6 PDF là **ảnh scan** (không có text; máy không có poppler/pymupdf) → OCR bằng
+  PDFKit + Vision (Swift, `vi-VN`), rồi xem ảnh từng trang có số liệu để sửa lỗi OCR (vd mã SV 123–128, không phải 1123).
+  Artifact 3 đề thi thử = dạng bài tự chấm, KHÔNG phải đề thật (đã ghi rõ trong skill).
+- Tạo `.claude/skills/ctdl-content/` (`SKILL.md` + `reference/exam-bank.md` + `reference/solutions/*.cpp`, 6 file,
+  tự kiểm bằng `assert`, biên dịch & chạy sạch bằng clang++; mọi đáp án "đọc code" đã chạy thật; trace tìm kiếm/sắp xếp khớp từng dòng với ví dụ của thầy).
+- Đăng ký môn: `src/subjects/ctdl/subject.tsx` (10 module, tất cả `ComingSoon`) + 1 dòng `registry.ts`; `docs/PLAN.md` có bảng 10 module kế hoạch.
+- Next: chọn module đầu (đề xuất `searching` + `sorting` — trace đã có sẵn trong `algos_trace.cpp`, port sang TS engine).
+
 ## 2026-09-15 (4) — XSTK Giai đoạn 2 complete: all 10/10 modules done
 
 - Implemented the 7 remaining modules per `docs/PLAN.md`'s Giai đoạn 2 backlog:
