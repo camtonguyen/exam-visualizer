@@ -10,7 +10,7 @@ môn mới.
 | Môn | id | Trạng thái | Nguồn tài liệu |
 |---|---|---|---|
 | Cấu trúc rời rạc | `ctrr` | ✅ Hoàn thành (8/8 module) | `Huong_dan_giai_de_cuoi_ky_CTRR.docx` |
-| (chưa xác định) | — | Chờ tài liệu | Sẽ cung cấp sau |
+| Xác suất Thống kê | `xstk` | ✅ Hoàn thành (10/10 module) | `docs/xstk/files/*.md` — 2 đề CITD HK1 2025-2026, 2 đề UICD-2025, 1 đề CK XSTK HK2 2023-2024 |
 
 Thêm hàng vào bảng này mỗi khi có môn mới, kể cả khi mới ở bước "chờ tài liệu".
 
@@ -87,11 +87,102 @@ còn lại chỉ là bảo trì:
 
 ---
 
-## Môn 2+: chưa xác định
+## Môn 2: Xác suất Thống kê (`src/subjects/xstk/`)
+
+Nguồn: `docs/xstk/files/*.md` — hướng dẫn giải chi tiết (kèm cách bấm máy Casio
+fx-880BTG) transcribed từ 5 đề: `citd_hk1_2025_2026_de1.md`, `citd_hk1_2025_2026_de2.md`
+(có đáp án đầy đủ), `de1_uicd_2025.md`, `de2_uicd_2025.md` (có đáp án), và
+`ck_xstk_hk2_2023_2024.md` (đề khác kỳ, giới thiệu 2 dạng bài mới không xuất hiện ở
+4 đề kia: phân phối đồng thời, kiểm định/ước lượng bằng Student-t). Đối chiếu cả 5, đề
+xoay quanh 10 dạng bài cố định (bảng dưới) — 1 dạng = 1 module, giống cấu trúc CTRR.
+(Dạng "biến ngẫu nhiên rời rạc/nhị thức" phỏng đoán ở lượt trước KHÔNG xuất hiện trong
+bất kỳ đề nào trong 5 file — đã loại khỏi danh sách, không phải dạng thật.)
+
+**✅ Môn XSTK hoàn thành đủ 10/10 module** (Giai đoạn 1: `bayes`, `continuous-density`,
+`normal-distribution`; Giai đoạn 2: `ci-known-sigma`, `ci-sample-proportion`,
+`hypothesis-proportion`, `t-distribution`, `regression`, `joint-discrete`,
+`joint-continuous`). Toàn bộ số liệu + công thức chi tiết nằm trong
+`.claude/skills/xstk-content/SKILL.md`, không lặp lại ở đây — việc còn lại (nếu có) chỉ
+là bảo trì, trừ khi có đề thi mới.
+
+### 10 module
+
+XSTK KHÔNG dùng canvas/animation cho bất kỳ dạng bài nào (khác với CTRR) — mỗi module
+hiển thị dạng "từng bước giải" (text, tái dùng `StepPlayer`), kèm `TipCallout` (mẹo),
+`CalculatorTip` (bấm máy), và `AnswerKeyPanel` ("ghi vào bài làm", format theo mẫu
+`docs/xstk/Dap an.jpg`). Xem "Ghi chú kiến trúc riêng của XSTK" bên dưới và
+`docs/decisions.md` cho lý do.
+
+| # | Module (`id`) | Nguồn (đề thật) | Trạng thái |
+|---|---|---|---|
+| 1 | `bayes` | MỌI đề (CITD Đề1,2; UICD Đề1,2), Câu 1 | ✅ Xong |
+| 2 | `continuous-density` | CITD Đề1,2 (bậc 3); UICD Đề1 (bậc 1); UICD Đề2 (bậc 2), Câu 3/Câu2 | ✅ Xong |
+| 3 | `normal-distribution` | CITD Đề1,2; UICD Đề1,2 — đủ 4 kiểu câu hỏi (cdf-left/cdf-right/inverse-left/inverse-topk) | ✅ Xong |
+| 4 | `ci-known-sigma` | UICD Đề1,2, Câu 4 — ước lượng khoảng KHI BIẾT σ + tìm cỡ mẫu tối thiểu | ✅ Xong |
+| 5 | `ci-sample-proportion` | CITD Đề1,2, Câu 4 — x̄/S từ bảng tần số ghép nhóm rồi ước lượng khoảng + kiểm định TỶ LỆ | ✅ Xong |
+| 6 | `hypothesis-proportion` | UICD Đề1,2 (2 phía), CK HK2 2023-2024 Câu3 (1 phía trái + CI cho p) | ✅ Xong |
+| 7 | `t-distribution` | CK HK2 2023-2024 Câu4 — CHƯA biết σ, n nhỏ → Student-t thay vì Z | ✅ Xong |
+| 8 | `regression` | CITD Đề1,2 (theo năm); CK HK2 2023-2024 Câu5 (bảng tần số 2 chiều, thiếu dữ liệu gốc — chỉ hiển thị kết quả) | ✅ Xong |
+| 9 | `joint-discrete` | CK HK2 2023-2024 Câu1 — bảng phân phối đồng thời rời rạc, biên, kiểm tra độc lập | ✅ Xong |
+| 10 | `joint-continuous` | CK HK2 2023-2024 Câu2 — mật độ đồng thời, mật độ biên, mật độ/xác suất có điều kiện (2 kiểu khác nhau) | ✅ Xong |
+
+Lưu ý module 5 và 6 cùng là "kiểm định tỷ lệ" nhưng khác nhau về NGUỒN f (5 = suy từ
+bảng tần số ghép nhóm trước, 6 = f cho sẵn trực tiếp) — không gộp thành 1 module vì
+bước "tính x̄/S từ bảng tần số ghép nhóm" (dùng chức năng 1-Variable Statistics + tần số
+trên máy) là 1 kỹ năng riêng biệt đáng có step riêng, không phải chi tiết vặt.
+
+### Ghi chú kiến trúc riêng của XSTK
+
+- **Không có canvas/animation nào trong XSTK** (khác CTRR) — quyết định 2026-09-15 (đợt
+  3): mỗi module hiển thị "từng bước giải" dạng text, không vẽ SVG/đồ họa. 5 canvas
+  viết ở đợt 2 (`ProbabilityTreeCanvas`, `AreaUnderCurveCanvas`, `DensityCurveCanvas`,
+  `NormalCurveCanvas`, `NumberLineCanvas`, `ScatterRegressionCanvas`) đã bị XÓA khỏi
+  codebase — đừng viết lại chúng cho module 4-10, dùng đúng 4 component dùng chung mới
+  dưới đây. `JointTableCanvas` (dự kiến cho `joint-discrete` ở đợt trước) cũng KHÔNG
+  cần tạo nữa — bảng phân phối đồng thời hiển thị dạng text/markdown table trong
+  `AnswerKeyPanel`, không cần SVG riêng.
+- 4 component dùng chung cho MỌI module XSTK (bắt buộc dùng đủ, không tự chế lại):
+  1. `src/components/ui/ExamplePicker.tsx` — hàng nút chọn đề (tổng quát hóa từ CTRR's
+     `GraphPicker`; `GraphPicker` giờ là wrapper mỏng quanh `ExamplePicker`, không ảnh
+     hưởng CTRR).
+  2. `src/components/ui/StepPlayer.tsx` — dùng chung với CTRR, hiện "từng bước giải"
+     (title/explanation của `AlgoStep`) dạng text, không cần canvas đi kèm.
+  3. `src/components/ui/TipCallout.tsx` (props `{tip: string}`) — "Mẹo" riêng của từng
+     ví dụ, transcribed nguyên văn từ nguồn. Không phải ví dụ nào cũng có mẹo trong
+     nguồn (vd CITD Đề2's Câu2 không có) — field `tip` ở data optional, component chỉ
+     render khi có, KHÔNG bịa mẹo để lấp chỗ trống.
+  4. `src/components/ui/CalculatorTip.tsx` (accordion, props `{menu, steps}`) — MỌI
+     module XSTK phải có ít nhất 1 cái, hiện đúng menu Casio fx-880BTG + phím bấm cụ
+     thể transcribed từ file nguồn (yêu cầu nội dung, không phải tùy chọn). Data type
+     `CalculatorTipData` export từ chính component, không đặt trong `engine/types.ts`.
+  5. `src/components/ui/AnswerKeyPanel.tsx` (props `{spec: AnswerKeySpec}`) — "Ghi vào
+     bài làm", format theo mẫu ảnh chụp `docs/xstk/Dap an.jpg`: khối đặt biến cố/giả
+     thiết (`setup`) rồi các phần a)/b)/c) (`parts`), mỗi dòng có thể kèm điểm
+     (`points`). CHỈ điền `points` khi nguồn thật sự cho điểm ở mức đó — 4 đề CITD/UICD
+     chỉ cho điểm TỔNG mỗi câu (vd "Câu 1 (2đ)"), không cho điểm chi tiết từng dòng như
+     ảnh mẫu, nên `answerKey.totalPoints` có nhưng từng `AnswerKeyLine.points` để trống
+     — đừng bịa điểm chi tiết để giống ảnh mẫu, đó là fabricate exam data.
+- `runContinuousDensity` giải K bằng cách tận dụng tính TUYẾN TÍNH của f(x,k) theo k
+  (tích phân tại k=0 và k=1 rồi suy hệ số) — tổng quát cho cả trường hợp k nhân toàn
+  biểu thức (CITD) và k chỉ là hằng số cộng thêm (UICD Đề1), không cần 2 nhánh code
+  riêng theo bậc đa thức. Không đổi khi bỏ canvas — vẫn cần cho step narration.
+- `engine/normalQuantile.ts` (Giai đoạn 2) — hàm nghịch đảo CDF chuẩn tắc thật (Acklam's
+  algorithm), dùng chung cho `ciKnownSigma.ts`/`ciSampleProportion.ts`/
+  `hypothesisProportion.ts` để lấy z-critical chuẩn (z_0.025=1.96, z_0.01=2.326...) —
+  KHÁC với `normalDistribution.ts`'s back-derive: những z này là hằng số textbook thật
+  (không phải số đáp án đề làm tròn theo bảng), nên tính bằng công thức liên tục là
+  ĐÚNG ở đây, không phải shortcut. Ngược lại, `t-distribution` KHÔNG có hàm nghịch đảo
+  t tương tự — `TTestSpec.tCriticalForCI`/`tCriticalForTest` là INPUT tra bảng t theo
+  df (đúng cách một học sinh thật sự làm, vì bảng t rời rạc theo df).
+- Xem `.claude/skills/xstk-content/SKILL.md` cho công thức + toàn bộ số liệu chi tiết.
+
+---
+
+## Môn 3+: chưa xác định
 
 Chưa có tài liệu. Khi tài liệu tới:
 
 1. Làm theo `docs/ADDING_A_SUBJECT.md` bước 0 (đọc tài liệu, liệt kê dạng bài) trước khi
    tạo bất kỳ thư mục nào.
-2. Thêm một bảng module cho môn đó vào PLAN.md này, đúng format bảng CTRR ở trên.
+2. Thêm một bảng module cho môn đó vào PLAN.md này, đúng format bảng CTRR/XSTK ở trên.
 3. Cập nhật bảng "Danh sách môn học" phía trên.

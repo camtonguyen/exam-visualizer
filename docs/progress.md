@@ -5,6 +5,174 @@ Keep each entry to ~3-5 lines — this is a pointer for `/resume`, not a full ch
 
 ---
 
+## 2026-09-15 (4) — XSTK Giai đoạn 2 complete: all 10/10 modules done
+
+- Implemented the 7 remaining modules per `docs/PLAN.md`'s Giai đoạn 2 backlog:
+  `ci-known-sigma`, `ci-sample-proportion`, `hypothesis-proportion`, `t-distribution`,
+  `regression`, `joint-discrete`, `joint-continuous`. Re-verified every number against
+  `docs/xstk/files/*.md` directly (grepped exact "Mẹo"/"Bấm máy" blocks for each Câu)
+  rather than trusting the PLAN.md summary alone.
+- Redesigned the 4 leftover placeholder types in `engine/types.ts`
+  (`ConfidenceIntervalSpec`, `HypothesisTestSpec`→`ProportionTestSpec`,
+  `RegressionSpec`) plus 3 new ones (`FrequencyBin`/`GroupedProportionSpec`,
+  `TTestSpec`, `JointDiscreteSpec`, `JointContinuousSpec`) to match what the actual
+  source data needs — the round-1 skeletons were never implemented against real data
+  and didn't fit (e.g. original `RegressionSpec` had no way to handle CK Câu5's
+  missing raw data case).
+- New shared helper `engine/normalQuantile.ts` (Acklam's inverse normal CDF
+  approximation) for standard z-critical values — verified it reproduces 1.96/2.326/
+  2.576/1.645 exactly before using it in 3 engines. Student-t critical values stayed
+  as plain table-lookup data fields (no t-quantile function written) — see
+  `docs/decisions.md` for why these two math-tooling choices are opposite calls
+  despite looking similar.
+- Verified numerically via standalone Node scripts BEFORE writing any engine/data
+  file: grouped-frequency mean/std (matches source exactly), OLS regression for both
+  CITD years (r/slope/intercept/predictions all exact), t-test statistics for the pH
+  data (t≈3.4586, matches source's ~3.458), and the joint-continuous double integral
+  (fX(0.5)=1, conditional probabilities 0.625/0.6, matching source exactly).
+- All 7 modules follow the established shape unchanged: `ExamplePicker → StepPlayer →
+  TipCallout? → CalculatorTip → AnswerKeyPanel`, no canvas, no new shared UI
+  components needed. Wired all 7 into `subject.tsx`, replacing the `ComingSoon`
+  placeholders.
+- Verified: `tsc -b --noEmit` clean, `npm run build` succeeds (with a benign >500kB
+  chunk-size warning, not an error); drove all 10 modules live via headless-Chromium
+  Playwright — every example across all 10 modules confirmed zero `<svg>` elements,
+  zero console errors, and exact match to the verified numbers (including the
+  t-distribution module correctly showing "BÁC BỎ H0", the only rejection case in the
+  whole dataset).
+- `docs/PLAN.md` XSTK section collapsed: the long "Số liệu Giai đoạn 1/2 đã verify"
+  data dumps were removed now that the data lives in code + `SKILL.md` (matches how
+  CTRR's finished module table doesn't re-list verified data in PLAN.md either).
+- No `subjects/ctrr/**` file touched. XSTK subject now complete: 10/10 modules, no
+  canvas anywhere, matching the exam-answer-key presentation style the user
+  requested.
+
+## 2026-09-15 (3) — XSTK drops canvas entirely: text-based "step + mẹo + bấm máy + ghi vào bài làm"
+
+- User asked to stop drawing canvas visuals for XSTK and instead show a step-by-step
+  solve with tips, calculator instructions, and an exam-answer-key-style "ghi vào bài
+  làm" block, using a handwritten answer sheet (`docs/xstk/Dap an.jpg`) as the FORMAT
+  reference. Used `AskUserQuestion` to confirm scope: applies to the whole subject,
+  including the 7 not-yet-built modules, not just the 3 done modules.
+- Read `Dap an.jpg` directly (it's a 6th, different exam — Câu 1 Binomial, Câu 2 a
+  2-event Bayes, Câu 3 continuous density, Câu 4 mixed) — confirmed its own problems
+  don't match our 3 implemented modules' data and were correctly NOT added as new
+  exam content; only its presentation style (event definitions → given data →
+  labeled a/b/c results, each with a point badge) was reused.
+- Deleted all 5 canvas components from the previous 2 rounds (`ProbabilityTreeCanvas`,
+  `AreaUnderCurveCanvas`, `DensityCurveCanvas`, `NormalCurveCanvas`,
+  `NumberLineCanvas`, `ScatterRegressionCanvas`) plus the now-dead canvas-facing
+  `DensitySpec` type. Dropped the previously-planned `JointTableCanvas` before it was
+  ever written.
+- Added 2 new shared components: `TipCallout` (renders one optional `tip` — several
+  source examples genuinely have no "Mẹo" line, e.g. CITD Đề2's normal-distribution
+  question, so this is optional rather than always-present) and `AnswerKeyPanel`
+  (title/totalPoints/setup/parts, matching the Dap an.jpg layout). Per-line `points`
+  deliberately left undefined for every example — the 4 real CITD/UICD sources only
+  give a whole-Câu point total, never a per-part breakdown, so faking per-line scores
+  to visually match the reference image would have been inventing exam data.
+- All 3 modules (`bayes`, `continuous-density`, `normal-distribution`) rewritten to a
+  single-column layout: `ExamplePicker` → `StepPlayer` → `TipCallout` (if present) →
+  `CalculatorTip` → `AnswerKeyPanel`. The 3 engine files needed zero changes — only
+  the module JSX and the 3 data files (added `tip`/`answerKey` per example, all
+  transcribed from `docs/xstk/files/*.md`) changed.
+- Verified: `tsc -b --noEmit` clean, `npm run build` succeeds; drove all 3 modules live
+  via headless-Chromium Playwright, confirmed the new layout renders correctly
+  (including the optional-tip case rendering with no TipCallout for CITD Đề2's normal
+  example), zero console errors.
+- `docs/PLAN.md` and `.claude/skills/xstk-content/SKILL.md` updated to drop all canvas
+  references from the Giai đoạn 2 module table and add the new architecture notes, so
+  the next 7 rounds build text-based modules from the start instead of canvases.
+- No `subjects/ctrr/**` file touched; CTRR keeps its canvases unchanged — this is an
+  XSTK-only exception to the project's general "every module owns a canvas" pattern,
+  recorded in `docs/decisions.md` with the reasoning (XSTK's content is exam-answer
+  formulas a student writes, not diagrams a student draws).
+- Next: same as before — pick one of the 7 remaining XSTK modules, now building
+  text-based from the start (no canvas to design).
+
+## 2026-09-15 (2) — XSTK re-scoped to 10 dạng bài, `continuous-density` added, Bayes/Normal generalized to all 4 real exams (3/10 module)
+
+- User supplied the actual source transcripts (`docs/xstk/files/*.md`, 5 files
+  including a new 6th exam `ck_xstk_hk2_2023_2024.md` from a different semester) — read
+  all 5 in full before touching code, per CLAUDE.md's "don't invent exam data" rule,
+  rather than trusting the prompt's restated numbers a second time. Found the prompt's
+  earlier guess of an 8th dạng ("biến ngẫu nhiên rời rạc/nhị thức") doesn't exist in any
+  of the 5 files — removed. Net result: 10 dạng bài (not 7), renumbered 1-10 with no
+  gaps; `subject.tsx`'s old `binomial`/`confidence-interval`/`hypothesis-test`
+  ComingSoon ids replaced with more specific ones (`ci-known-sigma`,
+  `ci-sample-proportion`, `hypothesis-proportion`, `t-distribution`) since none were
+  ever real linked routes.
+- **`bayes`**: added 2 more real examples (UICD Đề1/Đề2, both "Bayes đơn giản" — 1
+  branch, condition on B directly) alongside the existing CITD 2 (both "Bayes mở rộng"
+  — gộp 2 Ai, condition on B̄). The existing `BayesSpec`/`runBayes` from the first round
+  already generalized correctly for both cases via `targetEventIds`/
+  `conditionOnComplement` — zero engine/canvas changes needed, just 2 more data entries.
+  All 4 verified against source: 8.00%/86.30%, 9.68%/76.62%, 3.80%/55.26%, 3.20%/37.50%.
+- **`normal-distribution`**: redesigned `NormalSpec` from 2 hardcoded fields to
+  `queries: NormalQuery[]` supporting 4 modes (`cdf-left`/`cdf-right`/`inverse-left`/
+  `inverse-topk`) — the 2 UICD exams ask P(X>ngưỡng) and "ngưỡng của nhóm k% cao nhất",
+  neither of which the CITD-only design anticipated. `NormalCurveCanvas` gained a
+  "shade right" mode to match. All 4 verified: 2.275%/2887.15h, 2.275%/3342h,
+  10.56%/309.91 KWh, 7.66%/191.28cm. Bumped percent formatting from 2→3 decimals so the
+  well-known 2.275% figure renders exactly instead of rounding to 2.28%.
+- **`continuous-density`** (NEW, 3rd module this round): `ContinuousDensitySpec.fn(x,k)`
+  required to be linear in k, solved via 2-point Simpson's-rule integration (k=0, k=1)
+  instead of per-example symbolic algebra — handles both CITD's "K multiplies the whole
+  expression" and UICD Đề1's "K is only an additive constant" shapes with the same
+  code. Wires the previously-scaffolded-but-unused `DensityCurveCanvas` into a real
+  module for the first time. All 4 verified via a standalone Simpson's-rule script
+  before writing the data file: K/E(X)/Var(X)/P(interval) match the source exactly for
+  CITD Đề1/Đề2 (Var included); UICD Đề1/Đề2 match K/E(X)/P (Var not given in source,
+  left `undefined` rather than invented).
+- Added `src/components/ui/CalculatorTip.tsx` (accordion, `{menu, steps}`) — every XSTK
+  module now shows at least one, content transcribed verbatim from each source file's
+  own "Bấm máy" block (a content requirement, not decoration).
+- Verified: `tsc -b --noEmit` clean, `npm run build` succeeds; drove all 3 real modules
+  live via headless-Chromium Playwright across all 4 examples each (12 total), stepped
+  to "Cuối", expanded the CalculatorTip accordion, confirmed exact verified-number
+  matches and zero console errors; confirmed all 7 remaining ComingSoon links render.
+- `docs/PLAN.md` and `.claude/skills/xstk-content/SKILL.md` rewritten with the full
+  10-dạng structure and all Giai đoạn 2 data (ci-known-sigma, ci-sample-proportion,
+  hypothesis-proportion, t-distribution, regression, joint-discrete, joint-continuous)
+  so the next 7 rounds don't need to re-read `docs/xstk/files/*.md`.
+- No `subjects/ctrr/**` file touched.
+- Next: pick one of the 7 remaining XSTK modules — `joint-discrete` needs a new
+  `JointTableCanvas` component first (doesn't exist yet); the other 6 reuse existing
+  canvases.
+
+## 2026-09-15 (1) — Môn 2 (XSTK) started: `bayes` + `normal-distribution` (2/7 module)
+
+- Followed `docs/ADDING_A_SUBJECT.md` in order: read `docs/xstk/` source PDFs' already-
+  verified numbers (given directly, cross-checked by hand-recomputing all 4 Bayes/Normal
+  results before wiring them in — all matched exactly), listed the 7 dạng bài, added
+  `src/subjects/xstk/{engine,modules,data}`.
+- Added 7 new shared types to `engine/types.ts` (`PartitionEvent`, `ConditionalBranch`,
+  `BayesSpec`, `DensitySpec`, `NormalSpec`, `ConfidenceIntervalSpec`,
+  `HypothesisTestSpec`, `RegressionSpec`) — `BayesSpec`/`NormalSpec` ended up more
+  specific than the initial 2-field sketch (needed `targetEventIds`/
+  `conditionOnComplement` for "not the evening shift, given not-defective" style
+  questions; `NormalSpec` bundles both directions of the warranty-threshold problem).
+- 5 new shared canvases (`tree/ProbabilityTreeCanvas`, `curve/{AreaUnderCurveCanvas,
+  DensityCurveCanvas,NormalCurveCanvas}`, `numberline/NumberLineCanvas`,
+  `scatter/ScatterRegressionCanvas`) — only the tree and normal-curve ones are wired to a
+  real module this round, the other 3 are scaffolded per spec for later modules.
+  `GraphPicker` generalized into `ui/ExamplePicker` (thin wrapper kept for CTRR).
+- `engine/bayes.ts` + `engine/normalDistribution.ts` implemented and verified against
+  both CITD 2025-2026 exams' answer keys exactly (8.00%/86.30%, 9.68%/76.62%,
+  2887.15 giờ, 3342 giờ) — see `docs/decisions.md` for why the reverse-direction Normal
+  z is back-derived from the verified T rather than computed via inverse-CDF.
+  `continuous-rv`/`binomial`/`confidence-interval`/`hypothesis-test`/`regression` are
+  NOT implemented this round (out of scope) — their already-verified exam numbers are
+  recorded in `docs/PLAN.md` so they aren't lost before next round.
+- Verified: `tsc -b --noEmit` clean, `npm run build` succeeds; drove both modules live
+  via a headless-Chromium Playwright script (no `chromium-cli` available in this
+  container) — both example pickers, full step-through to "Cuối", tree/curve rendering,
+  and all 5 ComingSoon placeholders confirmed with zero console errors.
+- No `subjects/ctrr/**` file touched.
+- Next: pick one of the 5 remaining XSTK modules (`binomial`, `continuous-rv`,
+  `confidence-interval`, `hypothesis-test`, `regression`) — each gets its own prompt per
+  the task's stated scope, data already recorded in `docs/PLAN.md`/SKILL.md.
+
 ## 2026-09-14 (6) — `graphMinhHoa` redesigned again: fully distinct labels/weights
 
 - The previous session's `graphMinhHoa` (real exam `graph20232024` + 1 extra edge)
