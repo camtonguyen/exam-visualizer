@@ -11,6 +11,7 @@ môn mới.
 |---|---|---|---|
 | Cấu trúc rời rạc | `ctrr` | ✅ Hoàn thành (8/8 module) | `Huong_dan_giai_de_cuoi_ky_CTRR.docx` |
 | Xác suất Thống kê | `xstk` | ✅ Hoàn thành (10/10 module) | `docs/xstk/files/*.md` — 2 đề CITD HK1 2025-2026, 2 đề UICD-2025, 1 đề CK XSTK HK2 2023-2024 |
+| Cấu trúc Dữ liệu & Giải thuật (IT003) | `ctdl` | ✅ Hoàn thành: skill + kho đề + lời giải C++ + app: ✅ 10/10 module | `docs/ctdl/` — 6 PDF scan (đề mẫu CITD, hướng dẫn trình bày, luyện tập 005, 3 đề thực hành) + 15 file `.cpp` của thầy + artifact 3 đề thi thử |
 
 Thêm hàng vào bảng này mỗi khi có môn mới, kể cả khi mới ở bước "chờ tài liệu".
 
@@ -69,6 +70,20 @@ mới trừ khi thầy ra đề khác, và không định nghĩa `GRAPH_OPTIONS`
 - [x] `src/components/ui/GraphPicker.tsx` — hàng nút chọn đề dùng chung cho mọi module
       đồ thị (viết khi hoàn thiện `dijkstra`, đồng thời sửa lại `EulerModule.tsx` và
       `HamiltonModule.tsx` để dùng chung, không giữ 2 bản trùng chức năng).
+- [x] `src/components/pointer/PointerCanvas.tsx` + `AlgoStep.pointerSnapshot` (`PointerNode`/`PointerSnapshot`) — sơ đồ node + con trỏ dùng chung
+      (viết khi làm CTDL `stack`/`queue`, mở rộng cho `linked-list`/`doubly-linked-list`: nút 3 ngăn khi node có `prev`, cung nối tắt, stub đỏ "freed" cho pNext dangling;
+      sẽ dùng lại cho bucket của `hashtable`; BST cần layout cây riêng).
+      `components/ui/CodeBlock.tsx` — khối code chuẩn C++ cạnh phần trace.
+- [x] `src/components/ui/RichText.tsx` — hiển thị markup gọn (**đậm**, `code`, xuống dòng) bằng text node React, không innerHTML.
+- [x] `src/components/tree/TreeCanvas.tsx` + `AlgoStep.treeSnapshot` (`TreeSnapshot`/`TreeNodeView`) — cây nhị phân: x = thứ hạng trung tố (không chồng lấn, trái→phải = tăng dần), y = độ sâu; nhãn pGoto/pLoca/p dưới node,
+      node chờ chèn nét đứt, chip NULL, khung `std::stack` + output tích lũy.
+- [x] `src/components/memory/MemoryCanvas.tsx` + `AlgoStep.memorySnapshot`/`codeLine` (`MemorySnapshot`/`MemObjView`/`MemSlotView`) — sơ đồ stack/heap/con trỏ cho "đọc code ghi kết quả";
+      `CodeBlock` có prop `highlight` (tô dòng + số dòng). Engine: `ctdl/engine/memoryMachine.ts` (máy bộ nhớ + bộ phân giải biểu thức C++) và `memoryTrace.ts`.
+- [x] `src/components/hash/HashTableCanvas.tsx` + `AlgoStep.hashSnapshot` (`HashSnapshot`/`HashNode`) — bảng băm nối kết: cột bucket [i] + chuỗi node → NULL,
+      node mới cấp phát chưa nối vẽ nét đứt (`pending`), nhãn pHead/pTail/p dưới node. Canvas RIÊNG (không tái dùng `PointerCanvas`) vì quy ước hàng của PointerCanvas
+      (hàng 2 = node chưa nối) xung đột với "mỗi bucket một hàng", cần nhiều chuỗi song song + hàng nhỏ gọn.
+- [x] `src/components/table/ArrayCanvas.tsx` + `AlgoStep.arraySnapshot`/`arrayMarkers` — canvas mảng 1 chiều dùng chung (viết khi làm CTDL
+      `searching`/`sorting`; đọc `nodeHighlights[String(index)]` cùng bảng màu `NODE_COLOR` với GraphCanvas).
 - [x] `src/subjects/ctrr/graphOptions.ts` (`CTRR_GRAPH_OPTIONS`) — danh sách đồ thị dùng
       chung cho `GraphPicker` ở cả 4 module Câu 3, thay vì mỗi module tự định nghĩa
       `GRAPH_OPTIONS` riêng (viết khi thêm `graphMinhHoa` làm lựa chọn thứ 3).
@@ -178,7 +193,48 @@ trên máy) là 1 kỹ năng riêng biệt đáng có step riêng, không phải
 
 ---
 
-## Môn 3+: chưa xác định
+## Môn 3: Cấu trúc Dữ liệu & Giải thuật (`src/subjects/ctdl/`)
+
+Nguồn: `docs/ctdl/` (PDF là ảnh scan — đã OCR bằng Vision của macOS rồi đối chiếu bằng mắt từng trang
+có số liệu) + artifact `https://claude.ai/artifact/BUcXGh6Y78uijEWJ5vyxEd` (3 đề **thi thử** do người
+khác dựng, KHÔNG phải đề thật — chỉ dùng làm bộ luyện tập). Toàn bộ kiến thức + đáp án đã đóng gói ở
+`.claude/skills/ctdl-content/` (`SKILL.md`, `reference/exam-bank.md`, `reference/solutions/*.cpp` —
+6 file C++ tự kiểm bằng `assert`, đã biên dịch & chạy bằng clang++).
+
+**Khác CTRR/XSTK:** đây là môn *lập trình C++*, đề thi = lý thuyết ngắn + đọc code ghi kết quả + mô phỏng
+thuật toán + **viết hàm** (Input/Output comment, không `cout` ngoài hàm xuất) — nên "giải đề" của môn này là
+kho đáp án/code + trình chiếu từng bước, không phải công thức số.
+
+**Trạng thái:** ✅ skill + kho đề + lời giải · ✅ môn đã đăng ký trong app (`subject.tsx`, 10 module) ·
+✅ **10/10 module thật:** `pointers` (1), `linked-list` (2), `doubly-linked-list` (3), `stack` (4), `queue` (5), `hashtable` (6), `bst` (7), `searching` (8), `sorting` (9), `mock-exams` (10) trỏ `ComingSoon` (đúng quy ước "module chỉ mock = stub").
+Kiểm engine: `node src/subjects/ctdl/engine/check.mjs` (assert đối chiếu trace C++ đã xác minh + bất biến snapshot + fuzz 300 ca ×2 so với mô hình mảng).
+
+### 10 module (kế hoạch) — mọi ví dụ lấy từ `reference/exam-bank.md`
+
+| # | Module (`id`) | Ví dụ thật cần wire | Điều cần hiển thị theo bước | Trạng thái |
+|---|---|---|---|---|
+| 1 | `pointers` | 12 chương trình đúng nguyên văn đề thật: Đề mẫu Câu 4–7, Hướng dẫn (`*(a+3)+*(a+7)`, `(*p)++`), Luyện tập 005 Câu 5–10 — đối chiếu với ảnh trang | Máy bộ nhớ chạy từng dòng: STACK (biến/struct/mảng) + HEAP (`new`) + mũi tên con trỏ; ô vừa đổi được tô; NULL/`?` (rác); lỗi runtime dừng chương trình; heap mồ côi = rò rỉ; output tích lũy; khung code tô dòng đang chạy | ✅ Xong |
+| 2 | `linked-list` | `list.cpp`: loadData (10,79,39,26,88), timGiaTri 39/100, timNodeKeCuoi — tài liệu thật; + 1 ví dụ minh họa xóa node (kiến thức chuẩn, gắn nhãn, không có trong file nguồn) | Từng dòng addHead/addTail/tìm; xóa cần `prev` (cung nối tắt), lùi `pTail`, dangling sau `delete` | ✅ Xong |
+| 3 | `doubly-linked-list` | `QLSV_List2.cpp` (addTail 123 124 125, addHead 100, printList) — tài liệu thật; + 1 ví dụ minh họa xóa node (kiến thức chuẩn) | Cập nhật TỪNG chiều `pNext`/`pPre` ở dòng riêng, duyệt xuôi/ngược, nối tắt 2 chiều khi xóa | ✅ Xong |
+| 4 | `stack` | Đề mẫu Phần 2 (12 −95 78 −89 35 → pop → đếm), `demo_stackv1.cpp` (push 10 39 79 80 50, pop 5 lần), đổi 13→`1101` (`convert10_2`) — đều là tài liệu thật. Ngoặc/đảo chuỗi/palindrome chưa làm (text, không phải diagram node) | Từng dòng `p->pNext = s.pTop; s.pTop = p;` / pop lưu p→dời pTop→delete p; + code chuẩn | ✅ Xong |
+| 5 | `queue` | `Queue.cpp` (enQ 6 7 8 9 10, deQ ×2) + thi thử (enQ 5 8 3 / deQ / enQ 6 ⇒ `8 3 6`) + 1 ví dụ minh họa tự tạo (dangling `pRear`) | enQueue/deQueue từng dòng; bước `delete p` node cuối vẽ `pRear` dangling rồi mới `pRear = NULL` | ✅ Xong |
+| 6 | `hashtable` | `hashtable_static.cpp` (Size 10, 2 bộ), `hashtable_dynamic.cpp` (Size 7), `hashtable_4steps_dynamic.cpp` (Size 5), Test03 (Size 9, dữ liệu Câu 10 có giá trị trùng) + Test03 Câu 7 (tìm X) — đều là tài liệu thật | `add` từng dòng: `viTri = x % Size` → `initNode` (node nét đứt chưa nối) → `pHead = pTail = p` hoặc `pTail->pNext = p; pTail = p` (đụng độ nối cuối); `find` chỉ duyệt 1 bucket; in bảng theo `printHashtable` | ✅ Xong |
+| 7 | `bst` | `demo_tree_v1.cpp` (add 50 73 26 66 88 61, printTree, tìm 88), Test01 Câu 10 (11 giá trị có trùng ⇒ 8 node; NLR/LRN/LNR, đếm) và Câu 5 (tìm 60/65) — tài liệu thật; + 1 ví dụ thi thử (artifact) | Chèn không đệ quy từng bước (`pGoto` đi xuống, `pLoca` là cha, trùng bỏ qua, node mới nét đứt rồi nối); tìm; duyệt NLR/LNR/LRN; LNR bằng `std::stack` (hiện stack + output tích lũy); đếm node | ✅ Xong |
+| 8 | `searching` | Guide (tuyến tính 66; nhị phân 56 & 57; tìm 33 trong dãy chưa sắp xếp), LT005 Câu 3 (dãy **giảm dần**, tìm 32) + 2 ví dụ gắn nhãn thi thử/minh họa (nhị phân 27, nội suy 27) | `Bước k: L, R ⇒ M`, "DỪNG vì L phải ≤ R"; nội suy; cảnh báo khi dãy chưa sắp xếp | ✅ Xong |
+| 9 | `sorting` | Đề mẫu Câu 8 (`90 68 72 32 55 21`), guide (`3 2 5 1 4`, `79 39 26 66 55 20`), LT005 Câu 2 (giảm dần) — cả 4 là đề/hướng dẫn thật | Bảng chọn trực tiếp / chèn trực tiếp đúng định dạng thầy | ✅ Xong |
+| 10 | `mock-exams` | 2 tab: (a) **3 đề thi thử** của artifact, 42 câu (33 tự luận rubric + 9 điền), chuyển NGUYÊN VĂN bằng script từ dữ liệu artifact — KHÔNG phải đề thật; (b) **4 đề thực hành thật** (Đề mẫu Phần 2, Test01/02/03) | (a) tự chấm như artifact: viết nháp → xem đáp án mẫu → tick từng ý rubric; câu điền chấm all-or-nothing theo nhóm; điểm cộng (comment I/O) tách khỏi tổng 10; thanh điểm mốc 7, nộp bài, kết quả 3/4/3 theo phần. (b) KHÔNG chấm điểm (PDF không cho điểm từng câu): checklist "đã làm" + quy định phạt thật + lối tắt sang module/lời giải | ✅ Xong |
+
+Engine từng module = hàm thuần trả `AlgoResult` (mẫu đã làm: `engine/searching.ts`, `engine/sorting.ts` — port từ
+`algos_trace.cpp`, cùng câu chữ của đề). Module chạy-từng-bước dùng chung `components/table/ArrayCanvas.tsx` (mảng + con trỏ L/R/M/i) và
+`ctdl/answerKey.ts` (sinh "Ghi vào bài làm" từ `steps`). Hiển thị text bằng `StepPlayer`/`ExamplePicker`/`TipCallout`/`AnswerKeyPanel` (kiểu XSTK); canvas
+cây BST/bảng băm chỉ làm nếu thật sự cần và đặt ở `src/components/` (dùng chung).
+
+**Không có trong tài liệu môn (đừng thêm vào đề "thật"):** sắp xếp nổi bọt/nhanh/trộn/vun đống, AVL, đồ thị, phân tích
+độ phức tạp chi tiết, xóa node BST. Có ghi chú kiến thức chuẩn ở cuối SKILL.md, đánh dấu "ngoài nguồn".
+
+---
+
+## Môn 4+: chưa xác định
 
 Chưa có tài liệu. Khi tài liệu tới:
 
