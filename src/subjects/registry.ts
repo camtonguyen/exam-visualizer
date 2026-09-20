@@ -1,5 +1,6 @@
 import type { SubjectDef } from "./types";
 import { ctrrSubject } from "./ctrr/subject";
+import { xstkSubject } from "./xstk/subject";
 
 /**
  * Every subject the app knows about. To add a new subject:
@@ -8,10 +9,7 @@ import { ctrrSubject } from "./ctrr/subject";
  * That's it — nav, routing, and the home page all derive from this list.
  * See `docs/ADDING_A_SUBJECT.md` for the full checklist (engine/modules/data layout).
  */
-export const subjects: SubjectDef[] = [
-  ctrrSubject,
-  // next subject goes here, e.g.: xacSuatThongKeSubject,
-];
+export const subjects: SubjectDef[] = [ctrrSubject, xstkSubject];
 
 export function getSubject(id: string): SubjectDef | undefined {
   return subjects.find((s) => s.id === id);

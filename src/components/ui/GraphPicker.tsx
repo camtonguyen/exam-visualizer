@@ -1,4 +1,5 @@
 import type { GraphSpec, NodeId } from "@/engine/types";
+import { ExamplePicker } from "./ExamplePicker";
 
 export interface GraphOption {
   id: string;
@@ -14,27 +15,11 @@ interface GraphPickerProps {
 }
 
 /**
- * Shared "which đề" button row for every module that plays back an algorithm over one
- * of a small fixed set of GraphSpecs (Dijkstra, Euler, Hamilton, spanning-tree...). Plain
- * buttons, not a dropdown — 2-3 options is few enough that seeing them all at once beats
- * an extra click to open a menu.
+ * Graph-flavored wrapper around the generic `ExamplePicker` — same button-row UI, kept
+ * as its own component because `GraphOption` also carries `graph`/`defaultSource`, which
+ * `ExamplePicker` doesn't need to know about. Every CTRR module keeps importing this
+ * exact name/props; only the row-rendering implementation now lives in one place.
  */
 export function GraphPicker({ options, selectedId, onSelect }: GraphPickerProps) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      {options.map((o) => (
-        <button
-          key={o.id}
-          onClick={() => onSelect(o.id)}
-          className={`px-3 py-1.5 rounded-md border text-sm ${
-            o.id === selectedId
-              ? "border-exam-accent bg-exam-accent/10 text-exam-accent"
-              : "border-slate-600 text-slate-400 hover:border-exam-accent"
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
-    </div>
-  );
+  return <ExamplePicker options={options} selectedId={selectedId} onSelect={onSelect} />;
 }
