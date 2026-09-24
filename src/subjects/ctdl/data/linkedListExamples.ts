@@ -11,18 +11,39 @@ export interface LinkedListExample {
 export const LINKED_LIST_CODE = `struct Node { int data; Node* pNext; };
 struct List { Node* pHead; Node* pTail; };
 
+/*Thêm node vào đầu danh sách
+Input:
+    + List& l
+    + Node* p
+Output:
+    + List& l
+*/
 void addHead(List& l, Node* p)
 {
     if (l.pHead == nullptr) { l.pHead = l.pTail = p; }
     else                    { p->pNext = l.pHead; l.pHead = p; }
 }
 
+/*Thêm node vào cuối danh sách
+Input:
+    + List& l
+    + Node* p
+Output:
+    + List& l
+*/
 void addTail(List& l, Node* p)
 {
     if (l.pHead == nullptr) { l.pHead = l.pTail = p; }
     else                    { l.pTail->pNext = p; l.pTail = p; }
 }
 
+/*Tìm giá trị value có trong danh sách hay không
+Input:
+    + List l
+    + int value
+Output:
+    + return bool
+*/
 bool timGiaTri(List l, int value)
 {
     for (Node* p = l.pHead; p != nullptr; p = p->pNext)
@@ -30,7 +51,14 @@ bool timGiaTri(List l, int value)
     return false;
 }
 
-// Node kế cuối: loại rỗng / 1 node TRƯỚC khi viết p->pNext->pNext
+/*Tìm giá trị node kế cuối (loại rỗng / 1 node TRƯỚC khi viết p->pNext->pNext)
+Input:
+    + List l
+    + int& value
+Output:
+    + int& value
+    + return bool
+*/
 bool timNodeKeCuoi(List l, int& value)
 {
     if (l.pHead == nullptr || l.pHead == l.pTail) return false;
@@ -41,6 +69,14 @@ bool timNodeKeCuoi(List l, int& value)
 }
 
 // ---- kiến thức chuẩn (không có trong file nguồn): xóa cần prev, nhớ cập nhật pTail/pHead ----
+/*Xóa node đầu tiên có giá trị v (cần prev; nhớ cập nhật pHead/pTail)
+Input:
+    + List& l
+    + int v
+Output:
+    + List& l
+    + return bool
+*/
 bool removeValue(List& l, int v)
 {
     Node* prev = nullptr;

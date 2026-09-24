@@ -14,7 +14,7 @@ export interface DoublyLinkedListSpec {
 type Ptrs = Record<string, string | null>;
 
 /**
- * Chạy DSLK ĐÔI (`Node{pPre,data,pNext}`, `List{pHead,pTail}`) từng dòng lệnh theo `QLSV_List2.cpp` của thầy:
+ * Chạy DSLK ĐÔI (`Node{pPre,data,pNext}`, `List{pHead,pTail}`) từng dòng lệnh theo cách của `QLSV_List2.cpp` (data là int):
  * addHead/addTail — MỖI lệnh nối phải cập nhật CẢ 2 chiều (quên 1 chiều là lỗi hay gặp nhất) — và printList
  * (duyệt xuôi bằng pNext, ngược từ pTail bằng pPre). removeValue là kiến thức chuẩn (KHÔNG có trong file nguồn):
  * nhờ p->pPre nên không cần con trỏ prev riêng như DSLK đơn. `brief` gộp thêm node thành 1 bước.

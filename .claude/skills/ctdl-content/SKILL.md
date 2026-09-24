@@ -115,6 +115,23 @@ nội suy — như nhị phân nhưng vị trí đoán theo tỷ lệ giá trị
 
 Quy tắc chung: liệt kê từng con trỏ → node nó trỏ tới **sau mỗi dòng**; "gán con trỏ" ≠ "sao chép node".
 
+## Cách trình bày lời giải viết hàm (cách của thầy)
+
+```
+/*Câu 1: Thêm một phần tử vào stack
+Input:
+    + Stack& s
+    + int value
+Output:
+    + Stack& s
+    + return bool
+*/
+bool cau01(Stack& s, int value) { ... }
+```
+Khối Input/Output đứng TRƯỚC mỗi hàm (thiếu −0.25), mỗi dòng chỉ ghi kiểu + tên (KHÔNG thêm giải thích tiếng Việt trong ngoặc — hàm in thì Output liệt kê trường được in); tham số `&` nào bị hàm sửa thì cũng ghi ở Output; dùng đúng tên struct/trường đề cho
+(kể cả giá trị mặc định `= nullptr`, nên `new Node({value})` là đủ); Câu 4 là `main` gọi lại Câu 1–3; không cần `#include` nếu đề nói vậy.
+Mẫu đầy đủ 5 cấu trúc: `src/subjects/ctdl/data/practice_4cau.cpp`.
+
 ## Khi trả lời một câu của user
 
 1. Xác định dạng (6 dạng trên) → nếu là **thực hành/viết hàm**, mở file lời giải tương ứng, chỉ sửa kiểu dữ liệu/tên trường theo đề.
@@ -133,6 +150,7 @@ Quy tắc chung: liệt kê từng con trỏ → node nó trỏ tới **sau mỗ
 | Test02 QLSV DSLK đơn (10 câu) | `qlsv_test02.cpp` |
 | Test03 Hashtable SIZE=9 (10 câu) | `hash_test03.cpp` |
 | DSLK đơn/đôi, Stack (Đề mẫu Phần 2, LT005 Câu 1), Queue, ứng dụng Stack | `list_stack_queue.cpp` |
+| **Bộ luyện tập 4 câu như Đề mẫu Phần 2** — Stack (thật) + DSLK đơn, DSLK đôi, Queue, Bảng băm (tự soạn), lời giải đúng cách trình bày của thầy | `src/subjects/ctdl/data/practice_4cau.cpp` (kiểm bằng `engine/check.mjs`) |
 | Toàn bộ câu hỏi đề thật/luyện tập/artifact kèm đáp án | `reference/exam-bank.md` |
 
 Chạy lại tất cả: `for f in algos_trace list_stack_queue dethi_mau_viet_ham; do clang++ -std=c++17 $f.cpp -o /tmp/$f && /tmp/$f; done` và

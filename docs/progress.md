@@ -5,6 +5,18 @@ Keep each entry to ~3-5 lines — this is a pointer for `/resume`, not a full ch
 
 ---
 
+## 2026-09-24 — CTDL: giải đề theo cách của thầy + bộ luyện tập 4 câu (Stack, DSLK đơn/đôi, Queue, Bảng băm)
+
+- `data/practice_4cau.cpp`: 5 chương trình, mỗi chương trình đúng khuôn Đề mẫu Phần 2 (struct có giá trị mặc định như đề, `/*Câu N … Input: + … Output: + … */` trước MỖI hàm, `cau01/cau02/cau03`, Câu 4 = `main`
+  kiểm thử). Stack = đề thật (12 −95 78 −89 35); 4 phần còn lại tự soạn, gắn nhãn. App đọc thẳng file này (`?raw`, cắt theo BEGIN/END) nên lời giải hiển thị = code đã biên dịch.
+- `check.mjs`: có clang++ thì biên dịch từng phần `-Wall -Werror`, so output Câu 4, rồi gắn main kiểm ca biên (xóa cuối lùi pTail, 2 chiều DSLK đôi, pRear = NULL, đụng độ nối cuối, giữ trùng) + kiểm có khối Input/Output trước cau01–03.
+  Mutation test 6 lỗi cố ý. Không có clang++ thì bỏ qua và báo.
+- Bỏ Test01/02/03 khỏi phần tự luận (theo yêu cầu) — phần tự luận chỉ còn bộ 4 câu; lời giải C++ của Test01–03 vẫn ở `.claude/skills/ctdl-content/reference/solutions/`.
+- Module `sorting`: thêm `components/table/TraceTable.tsx` — bảng trình bày trên giấy của thầy (hàng chỉ số `i` đỏ, hàng đầu vào, mỗi bước 1 hàng; chọn trực tiếp gạch chân a[0..i], chèn trực tiếp tô vàng k ô ở "Lần #k"
+  đúng như PDF trang 3). Bảng hiện dần theo bước và đầy đủ trong "Ghi vào bài làm"; `check.mjs` khẳng định từng hàng/số ô đánh dấu khớp 2 mẫu của thầy.
+- DSLK đôi: code chuẩn đổi `SinhVien data` → `int data`; bỏ giải thích tiếng Việt trong các dòng Input/Output (chỉ ghi kiểu + tên).
+- Code chuẩn trong module Stack/Queue/DSLK đơn/DSLK đôi thêm khối Input/Output trước mỗi hàm. Tab "Đề thực hành & luyện tập 4 câu": nút "Xem lời giải (ghi Input/Output như thầy)".
+
 ## 2026-09-21 — CTDL: module `mock-exams` — hoàn tất 10/10 module
 
 - 3 đề thi thử của artifact (42 câu) được **trích bằng script** từ dữ liệu artifact đã lưu (chạy trong vm, HTML → markup gọn) rồi sinh `data/mockExams.ts` — không gõ tay nên không sai chữ; script không nằm trong repo (dữ liệu trong repo là nguồn từ nay).

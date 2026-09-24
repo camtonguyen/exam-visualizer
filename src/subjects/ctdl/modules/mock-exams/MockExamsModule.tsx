@@ -120,12 +120,12 @@ export default function MockExamsModule() {
       <div>
         <h2 className="mb-2 text-lg font-semibold">10. Đề thi thử &amp; đề thực hành (tự chấm)</h2>
         <p className="text-sm text-slate-400">
-          3 đề thi thử tự chấm (mỗi đề 14 câu, 10 điểm) và 4 đề thực hành thật để tự đánh dấu. Ôn từng dạng ở các module bên trái, rồi vào đây làm cả đề.
+          3 đề thi thử tự chấm (mỗi đề 14 câu, 10 điểm) và đề thực hành: bộ 4 câu như Đề mẫu (Stack, DSLK đơn, DSLK đôi, Queue, Bảng băm — có lời giải Input/Output). Ôn từng dạng ở các module bên trái, rồi vào đây làm cả đề.
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
         <button onClick={() => setTab("mock")} className={pill(tab === "mock")}>Đề thi thử tự chấm (3 đề)</button>
-        <button onClick={() => setTab("practice")} className={pill(tab === "practice")}>Đề thực hành (thật)</button>
+        <button onClick={() => setTab("practice")} className={pill(tab === "practice")}>Đề thực hành &amp; luyện tập 4 câu</button>
       </div>
 
       <div className={tab === "mock" ? "space-y-4" : "hidden"}>

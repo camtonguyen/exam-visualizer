@@ -11,7 +11,14 @@ export interface StackExample {
 export const STACK_CODE = `struct Node  { int data; Node* pNext; };
 struct Stack { Node* pTop; };
 
-// push = addHead: 2 dòng, đúng cả khi stack rỗng (không cần if/else)
+/*Thêm một phần tử vào stack (push = addHead: 2 dòng, đúng cả khi rỗng)
+Input:
+    + Stack& s
+    + int value
+Output:
+    + Stack& s
+    + return bool
+*/
 bool push(Stack& s, int value)
 {
     Node* p = initNode(value);       // p->pNext = NULL
@@ -21,7 +28,15 @@ bool push(Stack& s, int value)
     return true;
 }
 
-// pop: lưu p TRƯỚC khi dời pTop, rồi delete
+/*Lấy một phần tử ra khỏi stack (lưu p TRƯỚC khi dời pTop, rồi delete)
+Input:
+    + Stack& s
+    + int& value
+Output:
+    + Stack& s
+    + int& value
+    + return bool
+*/
 bool pop(Stack& s, int& value)
 {
     if (s.pTop == nullptr) return false;   // rỗng
@@ -32,6 +47,12 @@ bool pop(Stack& s, int& value)
     return true;
 }
 
+/*Đếm số phần tử trong stack
+Input:
+    + Stack s
+Output:
+    + return int
+*/
 int count(Stack s)
 {
     int dem = 0;
