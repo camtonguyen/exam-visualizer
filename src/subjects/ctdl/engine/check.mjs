@@ -73,6 +73,17 @@ assert.deepEqual(snaps(r), ["39 79 26 66 55 20","26 39 79 66 55 20","26 39 66 79
 r = runSort({ algorithm: "insertion", array: [11,54,37,69,85,74], order: "desc" });
 assert.deepEqual(snaps(r), ["54 11 37 69 85 74","54 37 11 69 85 74","69 54 37 11 85 74","85 69 54 37 11 74","85 74 69 54 37 11"]);
 assert.match(r.summary, /85 74 69 54 37 11/);
+// Bảng trình bày của thầy: chọn trực tiếp gạch chân i+1 ô (hình: Bước i=0 gạch "1", …, Bước i=3 gạch "1 2 3 4", "5" không gạch);
+// chèn trực tiếp tô k ô ở Lần #k (PDF trang 3: Lần #1 chỉ tô 39, Lần #5 tô 20 26 39 55 66, 79 trắng).
+{ const t = runSort({ algorithm: "selection", array: [3, 2, 5, 1, 4] }).table;
+  assert.deepEqual([t.mark, t.indexLabel, t.input], ["underline", "i", [3, 2, 5, 1, 4]]);
+  assert.deepEqual(t.rows.map(r => [r.label, r.cells.join(" "), r.marked]), [["Bước i = 0", "1 2 5 3 4", 1], ["Bước i = 1", "1 2 5 3 4", 2], ["Bước i = 2", "1 2 3 5 4", 3], ["Bước i = 3", "1 2 3 4 5", 4]]);
+  const u = runSort({ algorithm: "insertion", array: [79, 39, 26, 66, 55, 20] }).table;
+  assert.deepEqual([u.mark, u.inputLabel], ["fill", "Đầu vào:"]);
+  assert.deepEqual(u.rows.map(r => [r.label, r.cells.join(" "), r.marked]), [["Lần #1", "39 79 26 66 55 20", 1], ["Lần #2", "26 39 79 66 55 20", 2], ["Lần #3", "26 39 66 79 55 20", 3], ["Lần #4", "26 39 55 66 79 20", 4], ["Lần #5", "20 26 39 55 66 79", 5]]);
+  for (const ex of [[90, 68, 72, 32, 55, 21], [11, 54, 37, 69, 85, 74]]) for (const algorithm of ["selection", "insertion"]) {
+    const r = runSort({ algorithm, array: ex }); assert.equal(r.table.rows.length, r.steps.length - 1);   // 1 hàng bảng / 1 bước
+    r.table.rows.forEach((row, i) => assert.deepEqual(row.cells, r.steps[i + 1].arraySnapshot)); } }
 // Ngẫu nhiên: mọi kết quả phải đúng thứ tự & đủ phần tử, engine không đổi mảng đầu vào
 for (let t = 0; t < 300; t++) {
   const a = Array.from({ length: 1 + (t % 9) }, () => Math.floor(Math.random() * 20));
@@ -456,3 +467,64 @@ for (const e of MOCK_EXAMS) { const st = { checked: {}, answers: {} };
   assert.equal(scoreExam(e, st).total, 10, e.id); }
 
 console.log("OK engines");
+
+// ---------------- Đề luyện tập 4 câu (data/practice_4cau.cpp) — biên dịch THẬT từng phần bằng clang++ ----------------
+// Mỗi phần BEGIN/END là 1 chương trình hoàn chỉnh. Kiểm 2 lớp: (1) output của main (Câu 4) đúng như chú thích;
+// (2) đổi tên main rồi gắn thêm main kiểm các ca biên bằng assert. Không có clang++ (vd CI) ⇒ bỏ qua, báo rõ.
+{
+  const { execFileSync } = await import("node:child_process");
+  const fs = await import("node:fs");
+  const os = await import("node:os");
+  const path = await import("node:path");
+  const src = fs.readFileSync(process.env.PRACTICE_CPP ?? new URL("../data/practice_4cau.cpp", import.meta.url), "utf8");   // env: dùng khi mutation test trên bản sao
+  const section = (k) => src.match(new RegExp(`// ===== BEGIN ${k} =====\\n([\\s\\S]*?)// ===== END ${k} =====`))[1];
+  let hasClang = true;
+  try { execFileSync("clang++", ["--version"], { stdio: "ignore" }); } catch { hasClang = false; }
+  if (!hasClang) console.log("(bỏ qua practice_4cau.cpp: không có clang++)");
+  else {
+    const HDR = "#include <iostream>\n#include <new>\n#include <cassert>\nusing namespace std;\n";
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "p4c-"));
+    const run = (name, code) => { const f = path.join(dir, name + ".cpp"), b = path.join(dir, name);
+      fs.writeFileSync(f, code); execFileSync("clang++", ["-std=c++17", "-Wall", "-Werror", f, "-o", b]); return execFileSync(b, { encoding: "utf8", timeout: 5000 }); };   // lỗi tạo vòng con trỏ ⇒ lặp vô hạn ⇒ hết giờ = FAIL
+    const cases = {
+      stack: ["So phan tu: 5\nLay ra: 35\nSo phan tu: 4\n", `Stack s; int v = 0; assert(!cau02(s, v) && cau03(s) == 0);
+        for (int x : {12, -95, 78, -89, 35}) assert(cau01(s, x));
+        for (int x : {35, -89, 78, -95, 12}) { assert(cau02(s, v) && v == x); }
+        assert(s.pTop == nullptr && !cau02(s, v));`],
+      list: ["So phan tu: 5\nXoa 63: 1\nXoa 100: 0\nSo phan tu: 4\n", `List l; assert(!cau02(l, 1));
+        for (int x : {15, -42, 63, -8, 21}) assert(cau01(l, x));
+        assert(cau02(l, 21) && l.pTail->data == -8 && l.pTail->pNext == nullptr);   // xóa cuối: lùi pTail
+        assert(cau02(l, 15) && l.pHead->data == -42);                               // xóa đầu
+        assert(cau02(l, 63) && l.pHead->pNext->data == -8 && cau03(l) == 2);        // xóa giữa: nối tắt
+        assert(cau02(l, -42) && cau02(l, -8) && l.pHead == nullptr && l.pTail == nullptr);
+        assert(cau01(l, 7) && l.pHead == l.pTail);`],
+      dlist: ["So phan tu: 4\nXoa 27: 1\nSo phan tu: 3\n", `List l;
+        for (int x : {9, 27, -14, 50}) assert(cau01(l, x));
+        int back[] = {50, -14, 27, 9}, k = 0; for (Node* p = l.pTail; p; p = p->pPre) assert(p->data == back[k++]); assert(k == 4);
+        assert(cau02(l, 27) && l.pHead->pNext->data == -14 && l.pHead->pNext->pPre == l.pHead);
+        assert(cau02(l, 50) && l.pTail->data == -14 && l.pTail->pNext == nullptr);
+        assert(cau02(l, 9) && l.pHead->pPre == nullptr && l.pHead == l.pTail);
+        assert(cau02(l, -14) && l.pHead == nullptr && l.pTail == nullptr && !cau02(l, 1));`],
+      queue: ["So phan tu: 5\nLay ra: 6\nSo phan tu: 4\n", `Queue q; int v = 0; assert(!cau02(q, v));
+        for (int x : {6, -19, 33, 4, -27}) assert(cau01(q, x));
+        for (int x : {6, -19, 33, 4, -27}) assert(cau02(q, v) && v == x);           // FIFO
+        assert(q.pFront == nullptr && q.pRear == nullptr);                           // lấy hết => pRear = NULL
+        assert(cau01(q, 1) && q.pFront == q.pRear);`],
+      hash: ["So gia tri: 5\nTim 33: 1\nTim 40: 0\n", `Hashtable h; assert(cau03(h) == 0 && !cau02(h, 5));
+        for (int x : {19, 26, 8, 33, 12}) assert(cau01(h, x));
+        int b5[] = {19, 26, 33, 12}, k = 0; for (Node* p = h.bucket[5].pHead; p; p = p->pNext) assert(p->data == b5[k++]);
+        assert(k == 4 && h.bucket[5].pTail->data == 12 && h.bucket[1].pHead->data == 8);
+        assert(cau01(h, 19) && cau03(h) == 6);                                         // bảng băm giữ giá trị trùng
+        assert(cau02(h, 12) && !cau02(h, 5));`],
+    };
+    for (const [k, [out, extra]] of Object.entries(cases)) {
+      const code = section(k);
+      assert.match(code, /\/\*Câu 1:[\s\S]*Input:[\s\S]*Output:[\s\S]*\*\/\nbool cau01/, k + ": thiếu khối Input/Output trước Câu 1");
+      for (const n of ["02", "03"]) assert.match(code, new RegExp(`Output:[^/]*\\*/\\n(bool|int) cau${n}`), `${k}: thiếu Input/Output trước cau${n}`);
+      assert.equal(run(k, HDR + code), out, k + ": output Câu 4 sai");
+      run(k + "_edge", HDR + code.replace("int main()", "int student_main()") + `\nint main() {\n${extra}\n return 0; }\n`);
+    }
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+console.log("OK practice_4cau");

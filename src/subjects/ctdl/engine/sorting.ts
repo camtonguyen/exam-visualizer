@@ -1,4 +1,5 @@
 import type { AlgoResult, AlgoStep, HighlightState } from "@/engine/types";
+import type { TraceTableData } from "@/components/table/TraceTable";
 import type { SortOrder } from "./searching";
 
 export type SortAlgorithm = "selection" | "insertion";
@@ -23,13 +24,19 @@ function settled(from: number, to: number): Record<string, HighlightState> {
  *    khi j = i ("Hoán vị 2, 2"); n phần tử ⇒ n−1 bước.
  *  - chèn trực tiếp: "Lần #k (xét a[k]): …" — vùng a[0..k] luôn đã sắp xếp.
  * `order` "desc" đảo dấu so sánh (Luyện tập 005 Câu 2 chèn giảm dần).
+ * `table` = bảng trình bày trên giấy của thầy: chọn trực tiếp gạch chân a[0..i] ở "Bước i = k"; chèn trực tiếp tô vàng k ô đầu ở "Lần #k"
+ * (đếm đúng như PDF trang 3: Lần #1 chỉ tô 1 ô, Lần #5 tô 5 ô, ô cuối để trắng).
  */
-export function runSort(spec: SortSpec): AlgoResult {
+export function runSort(spec: SortSpec): AlgoResult & { table: TraceTableData } {
   const a = [...spec.array];
   const n = a.length;
   const asc = (spec.order ?? "asc") === "asc";
   const dir = asc ? "tăng" : "giảm";
   const steps: AlgoStep[] = [];
+  const table: TraceTableData =
+    spec.algorithm === "selection"
+      ? { mark: "underline", indexLabel: "i", inputLabel: "", input: [...a], rows: [] }
+      : { mark: "fill", inputLabel: "Đầu vào:", input: [...a], rows: [] };
 
   if (spec.algorithm === "selection") {
     const word = asc ? "min" : "max";
@@ -56,6 +63,7 @@ export function runSort(spec: SortSpec): AlgoResult {
         nodeHighlights: h,
         arrayMarkers: { i, [word]: best },
       });
+      table.rows.push({ label: `Bước i = ${i}`, cells: [...a], marked: i + 1 });
     }
   } else {
     steps.push({
@@ -86,7 +94,8 @@ export function runSort(spec: SortSpec): AlgoResult {
         nodeHighlights: h,
         arrayMarkers: { chèn: pos },
       });
+      table.rows.push({ label: `Lần #${k}`, cells: [...a], marked: k });
     }
   }
-  return { steps, summary: `Dãy sau khi sắp xếp ${dir} dần: ${arr(a)}` };
+  return { steps, summary: `Dãy sau khi sắp xếp ${dir} dần: ${arr(a)}`, table };
 }

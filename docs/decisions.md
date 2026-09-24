@@ -5,6 +5,12 @@ One entry per decision, not per session — see `docs/progress.md` for session-b
 
 ---
 
+## 2026-09-24 — CTDL: lời giải luyện tập nằm trong 1 file .cpp mà app đọc thẳng (`?raw`), không chép sang TS
+
+Lời giải "4 câu" là code C++ học sinh phải viết, nên phải là code biên dịch được. Để không có 2 bản (C++ đã kiểm và chuỗi TS chép lại, dễ lệch nhau), `data/practice_4cau.cpp` là nguồn duy nhất:
+Vite import `?raw` và cắt theo cặp `// ===== BEGIN k ===== / END k =====`; `check.mjs` cắt cùng cách rồi biên dịch từng phần. Mỗi phần là 1 chương trình hoàn chỉnh (struct riêng, `main` riêng), đúng như một bài làm, thay vì gom vào namespace.
+File nằm trong `src/subjects/ctdl/data/` (dữ liệu đề của môn) chứ không trong `.claude/skills/` để app không phụ thuộc thư mục skill. Các đề DSLK/Queue/Bảng băm là tự soạn cùng khuôn đề mẫu, gắn nhãn `similar`, không trộn với đề thật.
+
 ## 2026-09-21 — CTDL `mock-exams`: chuyển đề artifact bằng script thay vì gõ lại; đề thực hành thật KHÔNG chấm điểm; bằng chứng bộ đề đúng lấy từ engine
 
 (1) 42 câu của artifact có nhiều HTML (`<b>`, `<code>`, `&lt;`, bảng phụ). Gõ lại tay = rủi ro sai chữ số/đáp án; nên trích trực tiếp dữ liệu (`EXAMS`) từ file artifact đã lưu, chuyển HTML → markup gọn (`**đậm**`, `` `code` ``) có kiểm "không còn thẻ lạ" trước khi giải mã thực thể,

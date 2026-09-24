@@ -1,3 +1,12 @@
+import PRACTICE_CPP from "./practice_4cau.cpp?raw";
+
+/** Lời giải 1 đề "4 câu" = đúng 1 phần BEGIN/END của `practice_4cau.cpp` (đã biên dịch + tự kiểm trong `engine/check.mjs`). */
+export const practiceSolution = (key: string): string => {
+  const m = PRACTICE_CPP.match(new RegExp(`// ===== BEGIN ${key} =====\\n([\\s\\S]*?)// ===== END ${key} =====`));
+  if (!m) throw new Error(`practice_4cau.cpp thiếu phần ${key}`);
+  return m[1].trimEnd();
+};
+
 export interface PracticeExam {
   id: string;
   title: string;
@@ -5,13 +14,18 @@ export interface PracticeExam {
   source: string;
   /** Module của môn CTDL ôn kiến thức cho đề này (id trong `subject.tsx`). */
   moduleId: string;
-  /** File lời giải C++ đã biên dịch & tự kiểm (`.claude/skills/ctdl-content/reference/solutions/`). */
+  /** File lời giải C++ đã biên dịch & tự kiểm. */
   solution: string;
   questions: string[];
+  /** Khóa phần lời giải trong `practice_4cau.cpp`. */
+  solutionKey: string;
+  /** true = tự soạn cùng khuôn đề mẫu, KHÔNG phải đề thật. */
+  similar?: boolean;
 }
 
 /**
- * 4 đề THỰC HÀNH thật: Đề mẫu cuối kỳ CITD Phần 2 và `Test01/02/03_IT003.pdf` (đọc từ ảnh scan, đối chiếu từng trang).
+ * Phần tự luận: bộ "4 câu như Đề mẫu Phần 2" — Stack là đề thật, DSLK đơn/đôi, Queue, Bảng băm là TỰ SOẠN cùng khuôn (`similar`),
+ * mỗi đề kèm lời giải ghi Input/Output theo cách của thầy. (Test01/02/03 10 câu đã bỏ khỏi phần này theo yêu cầu; lời giải C++ vẫn còn trong skill.)
  * PDF KHÔNG cho điểm từng câu nên KHÔNG chấm điểm ở đây — chỉ danh sách yêu cầu để tự đánh dấu "đã làm" và quy định chấm thật.
  */
 export const PRACTICE_EXAMS: PracticeExam[] = [
@@ -21,7 +35,8 @@ export const PRACTICE_EXAMS: PracticeExam[] = [
     time: "cùng đề 90 phút",
     source: "IT003_Bai09_De_CuoiKy_CITD_De_mau.pdf (trang 7)",
     moduleId: "stack",
-    solution: "list_stack_queue.cpp (namespace stk)",
+    solution: "src/subjects/ctdl/data/practice_4cau.cpp (phần stack)",
+    solutionKey: "stack",
     questions: [
       "Cho struct Node { int data = 0; Node* pNext = nullptr; } và struct Stack { Node* pTop = nullptr; }.",
       "Câu 1. Viết hàm thêm một phần tử vào stack và trả về trạng thái thêm thành công hoặc không thành công.",
@@ -31,64 +46,71 @@ export const PRACTICE_EXAMS: PracticeExam[] = [
     ],
   },
   {
-    id: "test01",
-    title: "Test01 — Cây nhị phân tìm kiếm (float)",
-    time: "60 phút",
-    source: "Test01_IT003.pdf",
-    moduleId: "bst",
-    solution: "bst_test01.cpp",
-    questions: [
-      "Câu 1. Viết hàm chèn node chứa giá trị (số thực) vào cây; trường hợp bằng một node nào đó trong cây thì BỎ QUA.",
-      "Câu 2. Viết hàm tạo cây tự động: giá trị ngẫu nhiên trong [512; 723], số lượng [50; 60].",
-      "Câu 3. Viết hàm tạo cây tự động từ một mảng n phần tử.",
-      "Câu 4. Viết hàm duyệt cây theo NLR, LRN, LNR — in kèm 3 địa chỉ: NODE, Left, Right.",
-      "Câu 5. Viết hàm tìm giá trị X (nhập từ người dùng, truyền vào hàm): tìm thấy trả địa chỉ node, không thấy trả NULL.",
-      "Câu 6. Viết hàm đếm toàn bộ số node của cây.",
-      "Câu 7. Viết hàm in ra các node nhánh còn lại từ một node nhập từ bàn phím, duyệt LNR.  (đề mơ hồ — xem lời giải)",
-      "Câu 8. Viết hàm đếm số node có giá trị lớn hơn X và nhỏ hơn Y (X < node < Y); X, Y do người dùng nhập, truyền vào hàm.",
-      "Câu 9. Viết hàm đếm các node có giá trị chẵn và lẻ; trường hợp \"<\" trả về -1, \"=\" trả về 0, \">\" trả về 1.",
-      "Câu 10. Trong main: menu chọn các hàm từ câu 2 đến 9; Câu 3 dùng mảng demo 50, 75, 25, 30, 10, 90, 70, 60, 30, 70, 90.",
-    ],
-  },
-  {
-    id: "test02",
-    title: "Test02 (Đề 02) — QLSV bằng danh sách liên kết đơn",
-    time: "70 phút",
-    source: "Test02_IT003.pdf",
+    id: "sim-list",
+    title: "Luyện tập — DSLK đơn (4 câu)",
+    time: "tự luyện",
+    source: "Tự soạn theo khuôn Đề mẫu CITD Phần 2 — KHÔNG phải đề thật",
     moduleId: "linked-list",
-    solution: "qlsv_test02.cpp",
+    solution: "src/subjects/ctdl/data/practice_4cau.cpp (phần list)",
+    solutionKey: "list",
+    similar: true,
     questions: [
-      "Cho struct SinhVien { int maSV; char* hoTen (hoặc string); float diemMH; } và typedef SinhVien SV.",
-      "Câu 1. Viết hàm chèn node chứa SV vào cuối danh sách; thành công trả true, thất bại trả false.",
-      "Câu 2. Viết hàm xuất (in) danh sách sinh viên.",
-      "Câu 3. Viết hàm tìm SV theo mã SV; tìm thấy trả địa chỉ node, không thấy trả NULL.",
-      "Câu 4. Viết hàm đếm SV có điểm môn học dưới trung bình.",
-      "Câu 5. Viết hàm tính điểm trung bình của cả lớp.",
-      "Câu 6. Viết hàm tìm mã SV ĐẦU TIÊN có điểm môn học lớn nhất.",
-      "Câu 7. Viết hàm trả về các mã SV có điểm môn học trên 8.",
-      "Câu 8. Viết hàm cập nhật điểm môn học theo mã sinh viên.",
-      "Câu 9. Viết hàm sao chép các SV sang một danh sách mới; phân tích ý tưởng thực hiện.",
-      "Câu 10. Trong main tạo 6 SV (không dùng cin): {123,\"Nguyen A\",8.8} {124,\"Nguyen B\",9.7} {125,\"Nguyen C\",2.9} {126,\"Nguyen D\",9.7} {127,\"Nguyen E\",4.8} {128,\"Nguyen F\",7.5}; chèn vào danh sách rồi gọi câu 2–9; chụp DUY NHẤT 1 màn hình kết quả.",
+      "Cho struct Node { int data = 0; Node* pNext = nullptr; } và struct List { Node* pHead = nullptr; Node* pTail = nullptr; }.",
+      "Câu 1. Viết hàm thêm một phần tử vào cuối danh sách và trả về trạng thái thêm thành công hoặc không thành công.",
+      "Câu 2. Viết hàm xóa phần tử có giá trị x khỏi danh sách (trả về xóa được hay không).",
+      "Câu 3. Viết hàm đếm số lượng phần tử có trong danh sách.",
+      "Câu 4. Trong main, khai báo danh sách và thêm lần lượt 15, -42, 63, -8, 21; gọi các hàm câu 1, 2, 3 để kiểm thử. (Không cần khai báo thư viện.)",
     ],
   },
   {
-    id: "test03",
-    title: "Test03 — Bảng băm SIZE = 9, nối kết (int)",
-    time: "60 phút",
-    source: "Test03_IT003.pdf",
-    moduleId: "hashtable",
-    solution: "hash_test03.cpp",
+    id: "sim-dlist",
+    title: "Luyện tập — DSLK đôi (4 câu)",
+    time: "tự luyện",
+    source: "Tự soạn theo khuôn Đề mẫu CITD Phần 2 — KHÔNG phải đề thật",
+    moduleId: "doubly-linked-list",
+    solution: "src/subjects/ctdl/data/practice_4cau.cpp (phần dlist)",
+    solutionKey: "dlist",
+    similar: true,
     questions: [
-      "Câu 1. Viết hàm băm theo phương pháp chia.",
-      "Câu 2. Viết hàm khởi tạo giá trị tự động: ngẫu nhiên trong [856; 988], số lượng [45; 95].",
-      "Câu 3. Viết hàm nhập giá trị cho bảng băm từ mảng 1D n phần tử.",
-      "Câu 4. Viết hàm nhập thủ công từ bàn phím (điều kiện kết thúc tự quy định).",
-      "Câu 5. Viết hàm kiểm tra bảng băm có rỗng hay không (rỗng ⇒ true).",
-      "Câu 6. Viết hàm đếm các giá trị được lưu trữ trong bảng băm.",
-      "Câu 7. Viết hàm tìm giá trị X: thấy trả true, không thấy trả false.",
-      "Câu 8. Viết hàm tìm max VÀ min trong bảng băm (viết 1 hàm).",
-      "Câu 9. Viết hàm đếm giá trị chẵn và lẻ (dựa vào phần nguyên); \"<\" trả true, \"=\" trả 1, \">\" trả false.  (đề mơ hồ — xem lời giải)",
-      "Câu 10. Trong main thiết kế testcase gọi câu 2–9; dữ liệu Câu 3: 50, 75, 25, 30, 10, 90, 70, 60, 30, 70, 90.",
+      "Cho struct Node { Node* pPre = nullptr; int data = 0; Node* pNext = nullptr; } và struct List { Node* pHead = nullptr; Node* pTail = nullptr; }.",
+      "Câu 1. Viết hàm thêm một phần tử vào cuối danh sách và trả về trạng thái thêm thành công hoặc không thành công.",
+      "Câu 2. Viết hàm xóa phần tử có giá trị x khỏi danh sách (trả về xóa được hay không).",
+      "Câu 3. Viết hàm đếm số lượng phần tử có trong danh sách.",
+      "Câu 4. Trong main, khai báo danh sách và thêm lần lượt 9, 27, -14, 50; gọi các hàm câu 1, 2, 3 để kiểm thử. (Không cần khai báo thư viện.)",
+    ],
+  },
+  {
+    id: "sim-queue",
+    title: "Luyện tập — Queue (4 câu)",
+    time: "tự luyện",
+    source: "Tự soạn theo khuôn Đề mẫu CITD Phần 2 — KHÔNG phải đề thật",
+    moduleId: "queue",
+    solution: "src/subjects/ctdl/data/practice_4cau.cpp (phần queue)",
+    solutionKey: "queue",
+    similar: true,
+    questions: [
+      "Cho struct Node { int data = 0; Node* pNext = nullptr; } và struct Queue { Node* pFront = nullptr; Node* pRear = nullptr; }.",
+      "Câu 1. Viết hàm thêm một phần tử vào hàng đợi và trả về trạng thái thêm thành công hoặc không thành công.",
+      "Câu 2. Viết hàm lấy phần tử ra khỏi hàng đợi.",
+      "Câu 3. Viết hàm đếm số lượng phần tử có trong hàng đợi.",
+      "Câu 4. Trong main, khai báo hàng đợi và thêm lần lượt 6, -19, 33, 4, -27; gọi các hàm câu 1, 2, 3 để kiểm thử. (Không cần khai báo thư viện.)",
+    ],
+  },
+  {
+    id: "sim-hash",
+    title: "Luyện tập — Bảng băm SIZE = 7, nối kết (4 câu)",
+    time: "tự luyện",
+    source: "Tự soạn theo khuôn Đề mẫu CITD Phần 2 — KHÔNG phải đề thật",
+    moduleId: "hashtable",
+    solution: "src/subjects/ctdl/data/practice_4cau.cpp (phần hash)",
+    solutionKey: "hash",
+    similar: true,
+    questions: [
+      "Cho const int SIZE = 7; struct Node { int data = 0; Node* pNext = nullptr; }; struct Bucket { Node* pHead = nullptr; Node* pTail = nullptr; }; struct Hashtable { Bucket bucket[SIZE]; }.",
+      "Câu 1. Viết hàm thêm một giá trị vào bảng băm (hàm băm phương pháp chia) và trả về trạng thái thêm thành công hoặc không thành công.",
+      "Câu 2. Viết hàm tìm giá trị x trong bảng băm (có trả true, không có trả false).",
+      "Câu 3. Viết hàm đếm số lượng giá trị có trong bảng băm.",
+      "Câu 4. Trong main, khai báo bảng băm và thêm lần lượt 19, 26, 8, 33, 12; gọi các hàm câu 1, 2, 3 để kiểm thử. (Không cần khai báo thư viện.)",
     ],
   },
 ];

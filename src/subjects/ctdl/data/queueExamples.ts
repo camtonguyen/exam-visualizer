@@ -11,7 +11,13 @@ export interface QueueExample {
 export const QUEUE_CODE = `struct Node  { float data; Node* pNext; };
 struct Queue { Node* pFront; Node* pRear; };
 
-// enQueue = addTail ở pRear
+/*Thêm một phần tử vào hàng đợi (enQueue = addTail ở pRear)
+Input:
+    + Queue& q
+    + Node* p
+Output:
+    + Queue& q
+*/
 void enQueue(Queue& q, Node* p)
 {
     if (q.pFront == nullptr && q.pRear == nullptr)   // rỗng
@@ -26,7 +32,12 @@ void enQueue(Queue& q, Node* p)
     }
 }
 
-// deQueue = removeHead ở pFront
+/*Lấy một phần tử ra khỏi hàng đợi (deQueue = removeHead ở pFront)
+Input:
+    + Queue& q
+Output:
+    + Queue& q
+*/
 void deQueue(Queue& q)
 {
     if (isEmpty(q)) return;
