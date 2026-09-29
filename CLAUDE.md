@@ -31,7 +31,7 @@ component state; most don't).
 5. **`.claude/skills/<subject>-content/SKILL.md`** — verified domain facts for whichever
    subject you're touching (algorithm specifics, exam data) — load before implementing,
    not after.
-   Hiện có: `ctrr-content`, `xstk-content`, `ctdl-content` (CTDL còn kèm `reference/exam-bank.md` — toàn bộ đề
+   Hiện có: `ctrr-content`, `xstk-content`, `ctdl-content`, `attt-content` (CTDL còn kèm `reference/exam-bank.md` — toàn bộ đề
    + đáp án — và `reference/solutions/*.cpp` — code C++ đã biên dịch/kiểm chứng; dùng chúng để giải/ôn đề CTDL).
 6. **`graphify-out/graph.json`** (if present — see Graphify section) instead of re-reading
    every file in `src/`.
