@@ -5,6 +5,12 @@ Keep each entry to ~3-5 lines — this is a pointer for `/resume`, not a full ch
 
 ---
 
+## 2026-09-29 — ATTT: skill `attt-content` + module `quiz` (luyện đề trắc nghiệm)
+
+- Tài liệu `docs/attt/` (PDF, nhiều trang ảnh → OCR) đóng gói vào `.claude/skills/attt-content/` (SKILL.md + `reference/ciphers.py` kiểm câu tính mã).
+- Môn `attt` 1 module: `engine/quiz.ts` đọc đề markdown `data/exams/*.md` (`?raw` + `import.meta.glob`) → chấm 0.25đ/câu. Có `de-mau.md` (7 câu đề thật) + `de-luyen-1.md` (40 câu tự soạn).
+- Đề luyện 2, 3 chưa có (lần soạn bị bộ lọc an toàn dừng giữa chừng). Thêm đề = thả file `.md` đúng định dạng vào `data/exams/`.
+
 ## 2026-09-24 — CTDL: giải đề theo cách của thầy + bộ luyện tập 4 câu (Stack, DSLK đơn/đôi, Queue, Bảng băm)
 
 - `data/practice_4cau.cpp`: 5 chương trình, mỗi chương trình đúng khuôn Đề mẫu Phần 2 (struct có giá trị mặc định như đề, `/*Câu N … Input: + … Output: + … */` trước MỖI hàm, `cau01/cau02/cau03`, Câu 4 = `main`
