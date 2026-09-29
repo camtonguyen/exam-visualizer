@@ -57,7 +57,7 @@ export function parseExam(id: string, md: string): QuizExam {
   }
   flush();
 
-  for (const m of keyPart.matchAll(/^\| (\d+) \| ([abcd]) \| (.*) \|$/gm))
+  for (const m of keyPart.matchAll(/^\|\s*(\d+)\s*\|\s*([abcd])\s*\|\s*(.*?)\s*\|\s*$/gm))
     exam.key[Number(m[1])] = { answer: LETTERS.indexOf(m[2]), why: m[3] };
   exam.note = exam.note.trim();
 
